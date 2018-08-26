@@ -28,9 +28,14 @@ for i in 0..MAX_BRANCHES-1:
   branches[i] = @[]
 
 var currentBranch = 0
+var line: string
 
 while true:
-  for cmd in stdin.readLine.strip.split:
+  try:
+    line = stdin.readLine
+  except EOFError:
+    break
+  for cmd in line.strip.split:
     case cmd
     of "next":
       currentBranch = (currentBranch + 1) mod MAX_BRANCHES

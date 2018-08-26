@@ -1,5 +1,5 @@
 run: build
-    target/sound-garden
+    rlwrap target/sound-garden
 
 build:
     mkdir -p target

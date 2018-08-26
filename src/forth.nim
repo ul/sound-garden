@@ -29,6 +29,7 @@ proc execute*(s: var seq[Signal], cmd: string) =
   else:
     let e = case cmd
     of "dup": s[s.high]
+    of "mono": s.pop.channel(0)
     of "silence": silence
     of "whiteNoise": whiteNoise
     of "triangle": s.pop.triangle

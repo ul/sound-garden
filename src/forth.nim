@@ -65,6 +65,7 @@ proc execute*(s: var seq[Signal], cmd: string) =
     of "clip": s.pop.clip
     of "wrap": s.pop.wrap
     of "circle": s.pop.circle
+    of "clausen": s.pop.clausen
     else:
       var x: Signal
       try:

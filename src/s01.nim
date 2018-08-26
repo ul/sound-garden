@@ -12,7 +12,7 @@ proc saw*(freq: Signal, phase0: Signal = 0): Signal =
   proc f(ctx: Context): float =
     let i = ctx.channel
     if ctx.sampleNumber > sampleNumbers[i]:
-      phases[i] = (phases[i] + freq.f(ctx) / ctx.sampleRate.toFloat).mod(2.0)
+      phases[i] = (phases[i] + 2.0 * freq.f(ctx) / ctx.sampleRate.toFloat).mod(2.0)
       sampleNumbers[i] = ctx.sampleNumber
       let p0 = phase0.f(ctx) + 1.0
       return (p0 + phases[i]).mod(2.0) - 1.0
@@ -31,11 +31,11 @@ proc tri*(freq: Signal, phase0: Signal = 0): Signal = freq.saw(phase0).triangle
 proc rectangle*(phase: Signal, width: Signal): Signal =
   let p = linlin(-1, 1, 0, 1)
   proc f(ctx: Context): float =
-    if p(phase.f(ctx)) <= p(width.f(ctx)):
+    if p(phase.f(ctx)) <= width.f(ctx):
       return 1.0
     else:
       return -1.0
-  Signal(f: f, label: "saw(" && phase.label && ", " && width.label && ")")
+  Signal(f: f, label: "rectangle(" && phase.label && ", " && width.label && ")")
 
 proc pulse*(freq: Signal, width: Signal = 0.5, phase0: Signal = 0): Signal =
   freq.saw(phase0).rectangle(width)
@@ -85,4 +85,11 @@ proc hsine*(freq: Signal, phase0: Signal = 0): Signal = freq.saw(phase0).sinh
 proc hcosine*(freq: Signal, phase0: Signal = 0): Signal = freq.saw(phase0).cosh
 proc htangent*(freq: Signal, phase0: Signal = 0): Signal = freq.saw(phase0).tanh
 
-
+proc clausen*(phase: Signal, n: int = 100): Signal =
+  proc f(ctx: Context): float =
+    result = 0
+    let phi = PI * phase.f(ctx)
+    for i in 1..n:
+      let k = i.toFloat
+      result += sin(k*phi)/(k*k)
+  Signal(f: f,  label: "clausen(" && phase.label && ")")

@@ -7,3 +7,7 @@ build:
 
 watch:
     watchexec -e nim -- just build
+
+pack: build
+    strip target/sound-garden
+    7z a target/sg.7z target/sound-garden

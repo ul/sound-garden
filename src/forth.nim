@@ -54,14 +54,29 @@ proc execute*(s: var seq[Signal], cmd: string) =
     of "tanh": s.pop.tanh
     of "htangent": s.pop.htangent
     of "+": s.pop + s.pop
-    of "-": s.pop - s.pop
+    of "-":
+      let b = s.pop
+      let a = s.pop
+      a - b
     of "*": s.pop * s.pop
-    of "/": s.pop / s.pop
+    of "/":
+      let b = s.pop
+      let a = s.pop
+      a / b
     of "add": s.pop + s.pop
-    of "sub": s.pop - s.pop
+    of "sub":
+      let b = s.pop
+      let a = s.pop
+      a - b
     of "mul": s.pop * s.pop
-    of "div": s.pop / s.pop
-    of "mod": s.pop mod s.pop
+    of "div": 
+      let b = s.pop
+      let a = s.pop
+      a / b
+    of "mod":
+      let b = s.pop
+      let a = s.pop
+      a mod b
     of "clip": s.pop.clip
     of "wrap": s.pop.wrap
     of "circle": s.pop.circle

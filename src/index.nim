@@ -33,6 +33,7 @@ var currentBranch = 0
 var line: string
 
 while true:
+  stdout.write "> "
   try:
     line = stdin.readLine
   except EOFError:

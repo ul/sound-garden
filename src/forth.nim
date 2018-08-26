@@ -5,6 +5,10 @@ import strutils
 # TODO add signal labeling and stack inspection
  
 proc execute*(s: var seq[Signal], cmd: string) =
+  if cmd == "dump":
+    for i in countdown(s.high, s.low):
+      echo s[i].label
+    return 
   let e = case cmd
   of "silence": silence
   of "whiteNoise": whiteNoise

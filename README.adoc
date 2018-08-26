@@ -1,0 +1,16 @@
+= Sound Garden
+
+== Prerequisites
+
+* https://nim-lang.org[Nim] 0.18.0
+* http://libsound.io[libsoundio] 1.1.0
+* https://www.libsdl.org/[SDL] 2.0.8
+* https://github.com/casey/just[just] 0.3.2 
+
+== Build & Run
+
+----
+$ just run
+----
+
+

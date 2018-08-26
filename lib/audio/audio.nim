@@ -134,3 +134,8 @@ proc `signal=`*(stream: OutStream, s: Signal) =
   GC_unref stream.userdata.signal
   stream.userdata.signal = s
   GC_ref stream.userdata.signal
+
+proc signal*(stream: OutStream): Signal = stream.userdata.signal
+
+proc context*(stream: OutStream): Context =
+  result.deepCopy(stream.userdata.context)

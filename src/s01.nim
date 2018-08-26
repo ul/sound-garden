@@ -6,7 +6,7 @@ import std
 proc saw*(freq: Signal, phase0: Signal = 0): Signal =
   var phases: array[SOUNDIO_MAX_CHANNELS, float]
   var sampleNumbers: array[SOUNDIO_MAX_CHANNELS, int]
-  for i in 0..SOUNDIO_MAX_CHANNELS-1:
+  for i in 0..<SOUNDIO_MAX_CHANNELS:
     phases[i] = 0.0
     sampleNumbers[i] = 0
   proc f(ctx: Context): float =

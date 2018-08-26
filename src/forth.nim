@@ -8,8 +8,13 @@ proc execute*(s: var seq[Signal], cmd: string) =
   if cmd == "dump":
     for i in countdown(s.high, s.low):
       echo s[i].label
-    return 
+    return
+  elif cmd == "pop":
+    if s.len > 0:
+      discard s.pop
+    return
   let e = case cmd
+  of "dup": s[s.high]
   of "silence": silence
   of "whiteNoise": whiteNoise
   of "triangle": s.pop.triangle

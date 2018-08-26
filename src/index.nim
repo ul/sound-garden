@@ -26,5 +26,5 @@ var stack: seq[Signal] = @[]
 while true:
   for cmd in stdin.readLine.strip.split:
     stack.execute(cmd)
-  dac.signal = stack[high(stack)]
+  dac.signal = if stack.len > 0: stack[high(stack)] else: silence
 

@@ -22,9 +22,22 @@ echo "Format:\t\t", dac.stream.format
 echo "Sample Rate:\t", dac.stream.sampleRate
 echo "Latency:\t", dac.stream.softwareLatency
 
-var stack: seq[Signal] = @[]
+const MAX_BRANCHES = 8
+var branches: array[MAX_BRANCHES, seq[Signal]]
+for i in 0..MAX_BRANCHES-1:
+  branches[i] = @[]
+
+var currentBranch = 0
+
 while true:
   for cmd in stdin.readLine.strip.split:
-    stack.execute(cmd)
-  dac.signal = if stack.len > 0: stack[high(stack)] else: silence
+    case cmd
+    of "next":
+      currentBranch = (currentBranch + 1) mod MAX_BRANCHES
+    of "prev":
+      currentBranch = (currentBranch - 1 + MAX_BRANCHES) mod MAX_BRANCHES
+    else:
+      branches[currentBranch].execute(cmd)
+  let b = branches[currentBranch]
+  dac.signal = if b.len > 0: b[high(b)] else: silence
 

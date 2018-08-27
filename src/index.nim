@@ -39,8 +39,12 @@ while true:
   except EOFError:
     break
   for cmd in line.strip.split:
-    case cmd
+    let c = cmd.split(":")
+    case c[0]
     of "wave":
+      var step = 1
+      if c.len > 1:
+        step = c[1].parseInt
       let width = "tput cols".execProcess.strip.parseInt
       let height = 8
       var c = newCanvas(width, height)
@@ -48,9 +52,13 @@ while true:
       let s = dac.signal
       let project = linlin(-1, 1, 4.0*height.toFloat, 0)
       ctx.channel = 0
-      for i in 0..<(width*2):
-        c.toggle(i, s.f(ctx).project.toInt)
+      # NOTE we still need to call signal for each sample in case it's not pure
+      var sample: float
+      for i in 0..<(width*2*step):
+        sample = s.f(ctx)
         ctx.sampleNumber += 1
+        if i mod step == 0:
+          c.toggle(i div step, sample.project.toInt)
       echo c
       # ANSI codes to go clear the area we use for our drawing
       # echo "\e[A\e[K".repeat(height+2)
@@ -59,7 +67,7 @@ while true:
     of "prev":
       currentBranch = (currentBranch - 1 + MAX_BRANCHES) mod MAX_BRANCHES
     else:
-      branches[currentBranch].execute(cmd)
+      branches[currentBranch].execute(c[0])
   let b = branches[currentBranch]
   dac.signal = if b.len > 0: b[high(b)] else: silence
 

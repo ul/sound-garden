@@ -22,7 +22,45 @@ let dac = ros.value
 # TODO ensure that format is float32ne or support conversion
 echo "Format:\t\t", dac.stream.format
 echo "Sample Rate:\t", dac.stream.sampleRate
-echo "Latency:\t", dac.stream.softwareLatency
+echo "Channels:\t", dac.stream.layout.channelCount
+echo "Latency:\t", (1000.0 * dac.stream.softwareLatency).round(1), " ms"
+
+proc wave*(step: int = 1) =
+  let monitor = dac.monitor
+  let channelCount = dac.stream.layout.channelCount
+
+  let width = "tput cols".execProcess.strip.parseInt
+  let height = 8
+  let w = width * 2
+  let h = height * 4
+
+  if channelCount * step * w > monitor.capacity:
+    echo "step is too big"
+    return
+
+  var c = newCanvas(width, height)
+  var ys = newSeq[float](w)
+  var yMin = +Inf
+  var yMax = -Inf
+
+  for i in 0..<w:
+    let ptrSample = cast[ptr float](monitor.read_ptr)
+    let sample = ptrSample[]
+    ys[i] = sample
+    yMin = yMin.min(sample)
+    yMax = yMax.max(sample)
+    monitor.advance_read_ptr(cint(step * channelCount * float.sizeof))
+
+  let project = linlin(yMin, yMax, (h-1).toFloat, 0)
+  for i in 0..<w:
+    c.toggle(i, ys[i].project.toInt)
+
+  echo "▲ ", yMax.round(3)
+  echo c
+  echo "▼ ", yMin.round(3)
+   
+  # ANSI codes to go clear the area we use for our drawing, might be useful for animation
+  # echo "\e[A\e[K".repeat(height+2)
 
 const MAX_BRANCHES = 8
 var branches: array[MAX_BRANCHES, seq[Signal]]
@@ -45,23 +83,7 @@ while true:
       var step = 1
       if c.len > 1:
         step = c[1].parseInt
-      let width = "tput cols".execProcess.strip.parseInt
-      let height = 8
-      var c = newCanvas(width, height)
-      var ctx = dac.context
-      let s = dac.signal
-      let project = linlin(-1, 1, 4.0*height.toFloat, 0)
-      ctx.channel = 0
-      # NOTE we still need to call signal for each sample in case it's not pure
-      var sample: float
-      for i in 0..<(width*2*step):
-        sample = s.f(ctx)
-        ctx.sampleNumber += 1
-        if i mod step == 0:
-          c.toggle(i div step, sample.project.toInt)
-      echo c
-      # ANSI codes to go clear the area we use for our drawing
-      # echo "\e[A\e[K".repeat(height+2)
+      step.wave
     of "next":
       currentBranch = (currentBranch + 1) mod MAX_BRANCHES
     of "prev":

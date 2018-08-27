@@ -4,7 +4,9 @@ import context
 import signal
 
 GC_setMaxPause 300 # microseconds
- 
+
+const MONITOR_MAX_DUR = 1 # second
+
 type
   SoundSystem* = object
     sio*: ptr SoundIo
@@ -15,13 +17,16 @@ type
   UserData = object
     context: Context
     signal: Signal
+    monitor: ptr SoundIoRingBuffer
 
 let sizeOfChannelArea = sizeof SoundIoChannelArea
+let sizeOfSample = sizeof float
 
 proc writeCallback(outStream: ptr SoundIoOutStream, frameCountMin: cint, frameCountMax: cint) {.cdecl.} =
   GC_disable()
 
   let userdata = cast[ptr UserData](outStream.userdata)
+  let monitor = userdata.monitor
   let ctx = userdata.context
   let signal = userdata.signal.f
   let channelCount = outstream.layout.channelCount
@@ -39,14 +44,20 @@ proc writeCallback(outStream: ptr SoundIoOutStream, frameCountMin: cint, frameCo
       break
 
     let ptrAreas = cast[int](areas)
+    let ptrMonitor = cast[int](monitor.write_ptr)
 
     for frame in 0..<frameCount:
       for channel in 0..<channelCount:
         ctx.channel = channel
         let ptrArea = cast[ptr SoundIoChannelArea](ptrAreas + channel*sizeOfChannelArea)
         var ptrSample = cast[ptr float32](cast[int](ptrArea.pointer) + frame*ptrArea.step)
-        ptrSample[] = signal(ctx).float32
+        let sample = signal(ctx)
+        ptrSample[] = sample.float32
+        var ptrMonitorSample = cast[ptr float](ptrMonitor + frame * channelCount * sizeOfSample)
+        ptrMonitorSample[] = sample
       ctx.sampleNumber += 1
+
+    monitor.advance_write_ptr(cint(frameCount * channelCount * sizeOfSample))
 
     err = outstream.endWrite
     if err > 0 and err != cint(SoundIoError.Underflow):
@@ -117,6 +128,9 @@ proc newOutStream*(ss: SoundSystem): Result[OutStream] =
   var userdata = cast[ptr UserData](stream.userdata)
   userdata.context = ctx
   userdata.signal = silence
+  userdata.monitor = ss.sio.ring_buffer_create(
+    stream.sampleRate * stream.layout.channelCount * MONITOR_MAX_DUR
+  )
 
   return Result[OutStream](kind: Ok, value: OutStream(stream: stream, userdata: userdata))
 
@@ -128,6 +142,7 @@ proc `=destroy`(s: var OutStream) =
   s.stream.destroy
   GC_unref s.userdata.signal
   GC_unref s.userdata.context
+  s.userdata.monitor.destroy
   s.userdata.dealloc
 
 proc `signal=`*(stream: OutStream, s: Signal) =
@@ -139,3 +154,5 @@ proc signal*(stream: OutStream): Signal = stream.userdata.signal
 
 proc context*(stream: OutStream): Context =
   result.deepCopy(stream.userdata.context)
+
+proc monitor*(stream: OutStream): ptr SoundIoRingBuffer = stream.userdata.monitor

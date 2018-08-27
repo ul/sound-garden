@@ -2,11 +2,15 @@ import audio/signal
 import s00, s01, s02, s03
 import strutils
 
+const stackMarkers = ["⓪", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨"]
+
 proc execute*(s: var seq[Signal], cmd: string) =
   case cmd
   of "dump":
     for i in countdown(s.high, s.low):
-      echo s[i].label
+      let j = s.high - i
+      let m = if j < stackMarkers.len: stackMarkers[j] else: $i
+      echo m, " ", s[i].label
   of "pop":
     if s.len > 0:
       discard s.pop

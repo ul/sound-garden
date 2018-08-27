@@ -28,7 +28,7 @@ proc triangle*(phase: Signal): Signal =
 
 proc tri*(freq: Signal, phase0: Signal = 0): Signal = freq.saw(phase0).triangle
 
-proc rectangle*(phase: Signal, width: Signal): Signal =
+proc rectangle*(phase: Signal, width: Signal = 0.5): Signal =
   let p = linlin(-1, 1, 0, 1)
   proc f(ctx: Context): float =
     if p(phase.f(ctx)) <= width.f(ctx):

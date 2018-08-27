@@ -1,5 +1,5 @@
 import audio/signal
-import s00, s01, s02
+import s00, s01, s02, s03
 import strutils
 
 proc execute*(s: var seq[Signal], cmd: string) =
@@ -82,6 +82,11 @@ proc execute*(s: var seq[Signal], cmd: string) =
     of "wrap": s.pop.wrap
     of "circle": s.pop.circle
     of "clausen": s.pop.clausen
+    of "pan":
+      let c = s.pop
+      let right = s.pop
+      let left = s.pop
+      pan(left, right, c)
     else:
       var x: Signal
       try:

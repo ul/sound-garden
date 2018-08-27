@@ -3,7 +3,7 @@ import drawille
 import forth
 import math
 import osproc
-import s00, s01, s02
+import s00, s01, s02, s03
 import soundio
 import std
 import strutils

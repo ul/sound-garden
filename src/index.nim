@@ -53,7 +53,7 @@ proc wave*(step: int = 1) =
 
   let project = linlin(yMin, yMax, (h-1).toFloat, 0)
   for i in 0..<w:
-    c.toggle(i, ys[i].project.toInt)
+    c.toggle(i, max(0, min(h-1, ys[i].project.toInt)))
 
   echo "▲ ", yMax.round(3)
   echo c

@@ -5,20 +5,12 @@ import std
 
 proc saw*(freq: Signal, phase0: Signal = 0): Signal =
   var phases: array[SOUNDIO_MAX_CHANNELS, float]
-  var sampleNumbers: array[SOUNDIO_MAX_CHANNELS, int]
-  for i in 0..<SOUNDIO_MAX_CHANNELS:
-    phases[i] = 0.0
-    sampleNumbers[i] = 0
   proc f(ctx: Context): float =
     let i = ctx.channel
-    if ctx.sampleNumber > sampleNumbers[i]:
-      phases[i] = (phases[i] + 2.0 * freq.f(ctx) / ctx.sampleRate.toFloat).mod(2.0)
-      sampleNumbers[i] = ctx.sampleNumber
-      let p0 = phase0.f(ctx) + 1.0
-      return (p0 + phases[i]).mod(2.0) - 1.0
-    else:
-      return phases[i]
-  Signal(f: f, label: "saw(" && freq.label && ", " && phase0.label && ")")
+    phases[i] = (phases[i] + 2.0 * freq.f(ctx) / ctx.sampleRate.toFloat).mod(2.0)
+    let p0 = phase0.f(ctx) + 1.0
+    return (p0 + phases[i]).mod(2.0) - 1.0
+  Signal(f: f, label: "saw(" && freq.label && ", " && phase0.label && ")").mult
 
 proc triangle*(phase: Signal): Signal =
   proc f(ctx: Context): float =

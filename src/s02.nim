@@ -28,6 +28,62 @@ proc `/`*(a: Signal, b: Signal): Signal =
     label: "(" && a.label && " / " && b.label && ")"
   )
 
+proc `and`*(a: Signal, b: Signal): Signal =
+  proc f(ctx: Context): float =
+    if a.f(ctx) == 1.0 and b.f(ctx) == 1.0:
+      return 1.0
+    else:
+      return 0.0
+  Signal(f: f, label: "(" && a.label && " and " && b.label && ")")
+
+proc `or`*(a: Signal, b: Signal): Signal =
+  proc f(ctx: Context): float =
+    if a.f(ctx) == 1.0 or b.f(ctx) == 1.0:
+      return 1.0
+    else:
+      return 0.0
+  Signal(f: f, label: "(" && a.label && " or " && b.label && ")")
+
+proc `==`*(x: Signal, y: Signal): Signal =
+  proc f(ctx: Context): float =
+    if x.f(ctx) == y.f(ctx):
+      return 1.0
+    else:
+      return 0.0
+  Signal(f: f, label: "(" && x.label && " == " && y.label && ")")
+
+proc `<`*(x: Signal, y: Signal): Signal =
+  proc f(ctx: Context): float =
+    if x.f(ctx) < y.f(ctx):
+      return 1.0
+    else:
+      return 0.0
+  Signal(f: f, label: "(" && x.label && "< " && y.label && ")")
+
+proc `<=`*(x: Signal, y: Signal): Signal =
+  proc f(ctx: Context): float =
+    if x.f(ctx) <= y.f(ctx):
+      return 1.0
+    else:
+      return 0.0
+  Signal(f: f, label: "(" && x.label && " <= " && y.label && ")")
+
+proc `>`*(x: Signal, y: Signal): Signal =
+  proc f(ctx: Context): float =
+    if x.f(ctx) > y.f(ctx):
+      return 1.0
+    else:
+      return 0.0
+  Signal(f: f, label: "(" && x.label && " > " && y.label && ")")
+
+proc `>=`*(x: Signal, y: Signal): Signal =
+  proc f(ctx: Context): float =
+    if x.f(ctx) >= y.f(ctx):
+      return 1.0
+    else:
+      return 0.0
+  Signal(f: f, label: "(" && x.label && " >= " && y.label && ")")
+
 # Convenient for chaining
 proc add*(a: Signal, b: Signal): Signal = a + b
 proc mul*(a: Signal, b: Signal): Signal = a * b

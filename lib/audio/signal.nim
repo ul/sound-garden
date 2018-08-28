@@ -1,5 +1,6 @@
 import context
 import math
+import soundio
 import std
 
 const TWOPI* = 2.0 * PI
@@ -39,7 +40,19 @@ proc channel*(s: Signal, i: int = 0): Signal =
     sample
   Signal(f: f, label: "channel " & $i & " of " && s.label)
 
+proc mult*(s: Signal): Signal =
+  var samples: array[SOUNDIO_MAX_CHANNELS, float]
+  var sampleNumbers: array[SOUNDIO_MAX_CHANNELS, int]
+  proc f(ctx: Context): float =
+    let i = ctx.channel
+    if ctx.sampleNumber > sampleNumbers[i]:
+      sampleNumbers[i] = ctx.sampleNumber
+      samples[i] = s.f(ctx)
+    return samples[i]
+  Signal(f: f, label: s.label)
+
 proc linlin*(a, b, c, d: float): FF =
   let k = (d - c) / (b - a)
   proc f(x: float): float = k * (x - a) + c
   return f
+

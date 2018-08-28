@@ -91,6 +91,20 @@ proc execute*(s: var seq[Signal], cmd: string) =
       let right = s.pop
       let left = s.pop
       pan(left, right, c)
+    of "sh":
+      let x = s.pop
+      let trig = s.pop
+      sampleAndHold(trig, x)
+    of "pitch":
+      s.pop.pitch
+    of "prime":
+      s.pop.prime
+    of "uuu":
+      s.pop.uuu
+    of "nnn":
+      s.pop.nnn
+    of "mmm":
+      s.pop.mmm
     else:
       var x: Signal
       try:

@@ -34,34 +34,37 @@ proc sampleAndHold*(trig: Signal, x: Signal): Signal =
     samples[i] = result
   Signal(f: f, label: "sampleAndHold(" && trig.label && ", " && x.label && ")").mult
 
-proc uuu*(x: Signal): Signal =
+proc zeroCrossUp*(x: Signal): Signal =
   result = (x.prime < 0) and (x >= 0)
-  result.label = "uuu(" && x.label && ")"
+  result.label = "zeroCrossUp(" && x.label && ")"
 
-proc nnn*(x: Signal): Signal =
+proc countZeroCrosses*(x: Signal, cycles: int = 10): Signal =
   var counts: array[SOUNDIO_MAX_CHANNELS, float]
-  let u = x.uuu
+  var cs: array[SOUNDIO_MAX_CHANNELS, int]
+  let u = x.zeroCrossUp
   proc f(ctx: Context): float =
     let i = ctx.channel
     if u.f(ctx) == 0.0:
       counts[i] += 1.0
     else:
-      counts[i] = 0.0
+      cs[i] = (cs[i]+1) mod cycles
+      if cs[i] == 0:
+        counts[i] = 0.0
+      else:
+        counts[i] += 1.0
     return counts[i]
-  Signal(f: f, label: "nnn(" && x.label && ")").mult
+  Signal(f: f, label: "countZeroCrosses(" && x.label && ")").mult
 
-proc mmm*(x: Signal): Signal =
-  let n = x.nnn
+proc zeroCrosses*(x: Signal, cycles: int = 10): Signal =
+  let n = x.countZeroCrosses(cycles)
   result = sampleAndHold(n == 0, n.prime + 1)
-  result.label = "mmm(" && x.label && ")"
+  result.label = "zeroCrosses(" && x.label && ")"
 
-proc pitch*(x: Signal): Signal =
-  let m = x.mmm
+proc pitch*(x: Signal, cycles: int = 10): Signal =
+  let m = x.zeroCrosses(cycles)
   proc f(ctx: Context): float =
     let m = m.f(ctx)
     if m > 0:
-      return ctx.sampleRate.toFloat / m
-    else:
-      return 0
+      result = (cycles * ctx.sampleRate).toFloat / m
   Signal(f: f, label: "pitch(" && x.label && ")")
 

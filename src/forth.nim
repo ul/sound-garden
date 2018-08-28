@@ -99,12 +99,6 @@ proc execute*(s: var seq[Signal], cmd: string) =
       s.pop.pitch
     of "prime":
       s.pop.prime
-    of "uuu":
-      s.pop.uuu
-    of "nnn":
-      s.pop.nnn
-    of "mmm":
-      s.pop.mmm
     else:
       var x: Signal
       try:

@@ -3,8 +3,6 @@ import math
 import soundio
 import std
 
-const TWOPI* = 2.0 * PI
-
 type
   Signal* = ref object
     f*: proc(ctx: Context): float
@@ -47,7 +45,10 @@ proc mult*(s: Signal): Signal =
     let i = ctx.channel
     if ctx.sampleNumber > sampleNumbers[i]:
       sampleNumbers[i] = ctx.sampleNumber
+      let lastSample = ctx.lastSample
+      ctx.lastSample = samples[i]
       samples[i] = s.f(ctx)
+      ctx.lastSample = lastSample
     return samples[i]
   Signal(f: f, label: s.label)
 

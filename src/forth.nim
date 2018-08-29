@@ -96,9 +96,25 @@ proc execute*(s: var seq[Signal], cmd: string) =
       let trig = s.pop
       sampleAndHold(trig, x)
     of "pitch":
-      s.pop.pitch
+      s.pop.adaptivePitch
     of "prime":
       s.pop.prime
+    of "lpf":
+      let freq = s.pop
+      let x = s.pop
+      x.lpf(freq)
+    of "hpf":
+      let freq = s.pop
+      let x = s.pop
+      x.lpf(freq)
+    of "bqlpf":
+      let freq = s.pop
+      let x = s.pop
+      x.biQuadLPF(freq)
+    of "bqhpf":
+      let freq = s.pop
+      let x = s.pop
+      x.biQuadHPF(freq)
     else:
       var x: Signal
       try:

@@ -23,7 +23,7 @@ proc update*[T](b: var Box[T], f: proc(x: T): T) =
     b.value[] = f(b.value[])
 
 proc box*[T](x: T): Box[T] =
-  result = Box()
+  result = Box[T]()
   result.init()
   result.set(x)
 

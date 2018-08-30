@@ -4,6 +4,40 @@ import strutils
 
 const stackMarkers = ["⓪", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨"]
 
+proc word(s: var seq[Signal], f: proc(x: Signal): Signal, label: string): Signal =
+  let x = s.pop
+  result = f(x)
+  result.label = x.label & " " & label
+
+proc word(s: var seq[Signal], f: proc(x, _: Signal): Signal, label: string, y: Signal): Signal =
+  let x = s.pop
+  result = f(x, y)
+  result.label = x.label & " " & label
+
+proc word(s: var seq[Signal], f: proc(x: Signal, _: int): Signal, label: string, y: int): Signal =
+  let x = s.pop
+  result = f(x, y)
+  result.label = x.label & " " & label
+
+proc word(s: var seq[Signal], f: proc(x, y: Signal): Signal, label: string): Signal =
+  let y = s.pop
+  let x = s.pop
+  result = f(x, y) 
+  result.label = x.label & " " & y.label & " " & label
+
+proc word(s: var seq[Signal], f: proc(x, y, _: Signal): Signal, label: string, z: Signal): Signal =
+  let y = s.pop
+  let x = s.pop
+  result = f(x, y, z) 
+  result.label = x.label & " " & y.label & " " & z.label & " "  & label
+
+proc word(s: var seq[Signal], f: proc(x, y, z: Signal): Signal, label: string): Signal =
+  let z = s.pop
+  let y = s.pop
+  let x = s.pop
+  result = f(x, y, z) 
+  result.label = x.label & " " & y.label & " " & z.label & " "  & label
+
 proc execute*(s: var seq[Signal], cmd: string) =
   case cmd
   of "dump":
@@ -33,88 +67,56 @@ proc execute*(s: var seq[Signal], cmd: string) =
   else:
     let e = case cmd
     of "dup": s[s.high]
-    of "mono": s.pop.channel(0)
+    of "mono0":
+      let x = s.pop
+      let y = x.channel(0)
+      y.label = x.label & " mono0"
+      y
+    of "mono1":
+      let x = s.pop
+      let y = x.channel(1)
+      y.label = x.label & " mono1"
+      y
     of "silence": silence
     of "whiteNoise": whiteNoise
-    of "triangle": s.pop.triangle
-    of "rectangle":
-      let width = s.pop
-      s.pop.rectangle(width)
-    of "saw": s.pop.saw
-    of "tri": s.pop.tri
-    of "pulse":
-      let width = s.pop
-      let freq = s.pop
-      freq.pulse(width)
-    of "sin": s.pop.sin
-    of "sine": s.pop.sine
-    of "cos": s.pop.cos
-    of "cosine": s.pop.cosine
-    of "tan": s.pop.tan
-    of "tangent": s.pop.tangent
-    of "sinh": s.pop.sinh
-    of "hsine": s.pop.hsine
-    of "cosh": s.pop.cosh
-    of "hcosine": s.pop.hcosine
-    of "tanh": s.pop.tanh
-    of "htangent": s.pop.htangent
-    of "+": s.pop + s.pop
-    of "-":
-      let b = s.pop
-      let a = s.pop
-      a - b
-    of "*": s.pop * s.pop
-    of "/":
-      let b = s.pop
-      let a = s.pop
-      a / b
-    of "add": s.pop + s.pop
-    of "sub":
-      let b = s.pop
-      let a = s.pop
-      a - b
-    of "mul": s.pop * s.pop
-    of "div": 
-      let b = s.pop
-      let a = s.pop
-      a / b
-    of "mod":
-      let b = s.pop
-      let a = s.pop
-      a mod b
-    of "clip": s.pop.clip
-    of "wrap": s.pop.wrap
-    of "circle": s.pop.circle
-    of "clausen": s.pop.clausen
-    of "pan":
-      let c = s.pop
-      let right = s.pop
-      let left = s.pop
-      pan(left, right, c)
-    of "sh":
-      let x = s.pop
-      let trig = s.pop
-      sampleAndHold(trig, x)
-    of "pitch":
-      s.pop.adaptivePitch
-    of "prime":
-      s.pop.prime
-    of "lpf":
-      let freq = s.pop
-      let x = s.pop
-      x.lpf(freq)
-    of "hpf":
-      let freq = s.pop
-      let x = s.pop
-      x.lpf(freq)
-    of "bqlpf":
-      let freq = s.pop
-      let x = s.pop
-      x.biQuadLPF(freq)
-    of "bqhpf":
-      let freq = s.pop
-      let x = s.pop
-      x.biQuadHPF(freq)
+    of "triangle": s.word(triangle, "triangle")
+    of "rectangle": s.word(rectangle, "rectangle")
+    of "saw": s.word(saw, "saw")
+    of "tri": s.word(tri, "tri")
+    of "pulse": s.word(pulse, "pulse")
+    of "sin": s.word(sin, "sin")
+    of "sine": s.word(sine, "sine")
+    of "cos": s.word(cos, "cos")
+    of "cosine": s.word(cosine, "cosine")
+    of "tan": s.word(tan, "tan")
+    of "tangent": s.word(tangent, "tangent")
+    of "sinh": s.word(sinh, "sinh")
+    of "hsine": s.word(hsine, "hsine")
+    of "cosh": s.word(cosh, "cosh")
+    of "hcosine": s.word(hcosine, "hcosine")
+    of "tanh": s.word(tanh, "tanh")
+    of "htangent": s.word(htangent, "htangent")
+    of "+": s.word(add, "+")
+    of "-": s.word(sub, "-")
+    of "*": s.word(mul, "*")
+    of "/": s.word(`div`, "/")
+    of "add": s.word(add, "add")
+    of "sub": s.word(sub, "sub")
+    of "mul": s.word(mul, "mul")
+    of "div": s.word(`div`, "div")
+    of "mod": s.word(`mod`, "mod")
+    of "clip": s.word(clip, "clip")
+    of "wrap": s.word(wrap, "wrap")
+    of "circle": s.word(circle, "circle")
+    of "clausen": s.word(clausen, "clausen", 100)
+    of "pan": s.word(pan, "pan")
+    of "sh": s.word(sampleAndHold, "sh")
+    of "pitch": s.word(adaptivePitch, "pitch", 10)
+    of "prime": s.word(prime, "prime")
+    of "lpf": s.word(lpf, "lpf")
+    of "hpf": s.word(hpf, "hpf")
+    of "bqlpf": s.word(biQuadLPF, "bqlpf", 0.7071)
+    of "bqhpf": s.word(biQuadHPF, "bqhpf", 0.7071)
     else:
       var x: Signal
       try:

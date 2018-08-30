@@ -12,7 +12,7 @@ proc word(s: var seq[Signal], f: proc(x: Signal): Signal, label: string): Signal
 proc word(s: var seq[Signal], f: proc(x, _: Signal): Signal, label: string, y: Signal): Signal =
   let x = s.pop
   result = f(x, y)
-  result.label = x.label & " " & label
+  result.label = x.label & " " & y.label & " " & label
 
 proc word(s: var seq[Signal], f: proc(x: Signal, _: int): Signal, label: string, y: int): Signal =
   let x = s.pop
@@ -29,6 +29,12 @@ proc word(s: var seq[Signal], f: proc(x, y, _: Signal): Signal, label: string, z
   let y = s.pop
   let x = s.pop
   result = f(x, y, z) 
+  result.label = x.label & " " & y.label & " " & z.label & " "  & label
+
+proc word(s: var seq[Signal], f: proc(x, a, b: Signal): Signal, label: string, y, z: Signal): Signal =
+  let y = s.pop
+  let x = s.pop
+  result = f(x, y, z)
   result.label = x.label & " " & y.label & " " & z.label & " "  & label
 
 proc word(s: var seq[Signal], f: proc(x, y, z: Signal): Signal, label: string): Signal =
@@ -79,13 +85,19 @@ proc execute*(s: var seq[Signal], cmd: string) =
       y
     of "silence": silence
     of "whiteNoise": whiteNoise
+    of "noise": whiteNoise
+    of "n": whiteNoise
     of "triangle": s.word(triangle, "triangle")
     of "rectangle": s.word(rectangle, "rectangle")
     of "saw": s.word(saw, "saw")
+    of "w": s.word(saw, "saw")
     of "tri": s.word(tri, "tri")
+    of "t": s.word(tri, "tri", 0)
     of "pulse": s.word(pulse, "pulse")
+    of "p": s.word(pulse, "pulse", 0)
     of "sin": s.word(sin, "sin")
     of "sine": s.word(sine, "sine")
+    of "s": s.word(sine, "sine", 0)
     of "cos": s.word(cos, "cos")
     of "cosine": s.word(cosine, "cosine")
     of "tan": s.word(tan, "tan")
@@ -105,8 +117,8 @@ proc execute*(s: var seq[Signal], cmd: string) =
     of "mul": s.word(mul, "mul")
     of "div": s.word(`div`, "div")
     of "mod": s.word(`mod`, "mod")
-    of "clip": s.word(clip, "clip")
-    of "wrap": s.word(wrap, "wrap")
+    of "clip": s.word(clip, "clip", -1.0, 1.0)
+    of "wrap": s.word(wrap, "wrap", -1.0, 1.0)
     of "circle": s.word(circle, "circle")
     of "clausen": s.word(clausen, "clausen", 100)
     of "pan": s.word(pan, "pan")
@@ -115,8 +127,10 @@ proc execute*(s: var seq[Signal], cmd: string) =
     of "prime": s.word(prime, "prime")
     of "lpf": s.word(lpf, "lpf")
     of "hpf": s.word(hpf, "hpf")
-    of "bqlpf": s.word(biQuadLPF, "bqlpf", 0.7071)
-    of "bqhpf": s.word(biQuadHPF, "bqhpf", 0.7071)
+    of "bqlpf": s.word(biQuadLPF, "bqlpf")
+    of "l": s.word(biQuadLPF, "bqlpf", 0.7071)
+    of "bqhpf": s.word(biQuadHPF, "bqhpf")
+    of "h": s.word(biQuadHPF, "bqhpf", 0.7071)
     else:
       var x: Signal
       try:

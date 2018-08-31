@@ -104,6 +104,12 @@ proc `>=`*(x: Signal, y: Signal): Signal =
       return 0.0
   Signal(f: f, label: "(" && x.label && " >= " && y.label && ")")
 
+proc equal*(x: Signal, y: Signal): Signal = x == y
+proc less*(x: Signal, y: Signal): Signal = x < y
+proc lessEqual*(x: Signal, y: Signal): Signal = x <= y
+proc greater*(x: Signal, y: Signal): Signal = x > y
+proc greaterEqual*(x: Signal, y: Signal): Signal = x >= y
+
 # Convenient for chaining
 proc add*(a: Signal, b: Signal): Signal = a + b
 proc mul*(a: Signal, b: Signal): Signal = a * b

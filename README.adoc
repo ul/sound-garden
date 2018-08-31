@@ -6,6 +6,7 @@
 * http://libsound.io[libsoundio] 1.1.0
 * https://www.libsdl.org/[SDL] 2.0.8
 * https://github.com/casey/just[just] 0.3.2 
+* https://github.com/hanslub42/rlwrap[rlwrap]
 
 == Build & Run
 

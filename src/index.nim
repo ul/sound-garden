@@ -3,7 +3,6 @@ import drawille
 import forth
 import math
 import osproc
-import s00, s01, s02, s03
 import soundio
 import std
 import strutils
@@ -91,5 +90,5 @@ while true:
     else:
       branches[currentBranch].execute(c[0])
   let b = branches[currentBranch]
-  dac.signal = if b.len > 0: b[high(b)] else: silence
+  dac.signal = if b.len > 0: b[high(b)] else: 0
 

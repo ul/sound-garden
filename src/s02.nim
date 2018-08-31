@@ -8,8 +8,28 @@ proc `+`*(a: Signal, b: Signal): Signal =
     label: "(" && a.label && " + " && b.label && ")"
   )
 
-# Consider checking if the first operand is zero and short-circuiting
-# It could help to reduce load when envelopes are involved
+# NOTE short circuiting on the first operand being zero to allow
+# efficient triggered envelopes trick
+proc `.*`*(a: Signal, b: Signal): Signal =
+  proc f(ctx: Context): float =
+    let x = a.f(ctx)
+    if x < 1e-6:
+      return 0.0
+    else:
+     return x * b.f(ctx)
+  Signal(f: f, label: "(" && a.label && " * " && b.label && ")")
+
+# NOTE short circuiting on the second operand being zero to allow
+# efficient triggered envelopes trick
+proc `*.`*(a: Signal, b: Signal): Signal =
+  proc f(ctx: Context): float =
+    let x = b.f(ctx)
+    if x < 1e-6:
+      return 0.0
+    else:
+     return x * a.f(ctx)
+  Signal(f: f, label: "(" && a.label && " * " && b.label && ")")
+
 proc `*`*(a: Signal, b: Signal): Signal =
   Signal(
     f: proc(ctx: Context): float = a.f(ctx) * b.f(ctx),

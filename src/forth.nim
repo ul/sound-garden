@@ -1,5 +1,5 @@
 import audio/signal
-import s00, s01, s02, s03
+import s00, s01, s02, s03, s04
 import strutils
 
 const stackMarkers = ["⓪", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨"]
@@ -32,7 +32,6 @@ proc word(s: var seq[Signal], f: proc(x, y, _: Signal): Signal, label: string, z
   result.label = x.label & " " & y.label & " " & z.label & " "  & label
 
 proc word(s: var seq[Signal], f: proc(x, a, b: Signal): Signal, label: string, y, z: Signal): Signal =
-  let y = s.pop
   let x = s.pop
   result = f(x, y, z)
   result.label = x.label & " " & y.label & " " & z.label & " "  & label
@@ -47,10 +46,13 @@ proc word(s: var seq[Signal], f: proc(x, y, z: Signal): Signal, label: string): 
 proc execute*(s: var seq[Signal], cmd: string) =
   case cmd
   of "dump":
-    for i in countdown(s.high, s.low):
-      let j = s.high - i
-      let m = if j < stackMarkers.len: stackMarkers[j] else: $i
-      echo m, " ", s[i].label
+    if s.len == 0:
+      echo "<empty>"
+    else:
+      for i in countdown(s.high, s.low):
+        let j = s.high - i
+        let m = if j < stackMarkers.len: stackMarkers[j] else: $j
+        echo m, " ", s[i].label
   of "pop":
     if s.len > 0:
       discard s.pop
@@ -90,7 +92,7 @@ proc execute*(s: var seq[Signal], cmd: string) =
     of "triangle": s.word(triangle, "triangle")
     of "rectangle": s.word(rectangle, "rectangle")
     of "saw": s.word(saw, "saw")
-    of "w": s.word(saw, "saw")
+    of "w": s.word(saw, "saw", 0)
     of "tri": s.word(tri, "tri")
     of "t": s.word(tri, "tri", 0)
     of "pulse": s.word(pulse, "pulse")
@@ -111,6 +113,8 @@ proc execute*(s: var seq[Signal], cmd: string) =
     of "+": s.word(add, "+")
     of "-": s.word(sub, "-")
     of "*": s.word(mul, "*")
+    of ".*": s.word(`.*`, "*")
+    of "*.": s.word(`*.`, "*")
     of "/": s.word(`div`, "/")
     of "add": s.word(add, "add")
     of "sub": s.word(sub, "sub")
@@ -131,6 +135,7 @@ proc execute*(s: var seq[Signal], cmd: string) =
     of "l": s.word(biQuadLPF, "bqlpf", 0.7071)
     of "bqhpf": s.word(biQuadHPF, "bqhpf")
     of "h": s.word(biQuadHPF, "bqhpf", 0.7071)
+    of "fb": s.word(feedback, "fb")
     else:
       var x: Signal
       try:

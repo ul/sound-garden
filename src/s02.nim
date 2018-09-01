@@ -142,3 +142,5 @@ proc wrap*(input: Signal, min: Signal = -1, max: Signal = 1): Signal =
     f: f,
     label: "wrap(" && input.label && ", " && min.label && ", " && max.label && ")"
   )
+
+let exp* = exp.toSignal("exp")

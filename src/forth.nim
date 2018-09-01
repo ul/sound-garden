@@ -45,13 +45,24 @@ proc word(s: var seq[Signal], f: proc(x, y, z: Signal): Signal, label: string): 
 
 proc execute*(s: var seq[Signal], cmd: string) =
   case cmd
+  of "empty":
+    s.setLen(0)
   of "dump":
+    if s.len == 0:
+      echo "<empty>"
+    else:
+      let low = max(s.low, s.high - 9)
+      for i in countdown(s.high, low):
+        let j = s.high - i
+        let m = if j < stackMarkers.len: stackMarkers[j] else: $j & ")"
+        echo m, " ", s[i].label
+  of "dumpall":
     if s.len == 0:
       echo "<empty>"
     else:
       for i in countdown(s.high, s.low):
         let j = s.high - i
-        let m = if j < stackMarkers.len: stackMarkers[j] else: $j
+        let m = if j < stackMarkers.len: stackMarkers[j] else: $j & ")"
         echo m, " ", s[i].label
   of "pop":
     if s.len > 0:
@@ -74,16 +85,19 @@ proc execute*(s: var seq[Signal], cmd: string) =
       s[i-2] = b
   else:
     let e = case cmd
-    of "dup": s[s.high]
-    of "mono0":
+    of "dup":
+      let x = s[s.high]
+      let y = Signal(f: x.f, label: "(" & x.label & " dup)")
+      y
+    of "ch0":
       let x = s.pop
       let y = x.channel(0)
-      y.label = x.label & " mono0"
+      y.label = x.label & " ch0"
       y
-    of "mono1":
+    of "ch1":
       let x = s.pop
       let y = x.channel(1)
-      y.label = x.label & " mono1"
+      y.label = x.label & " ch1"
       y
     of "silence": silence
     of "whiteNoise": whiteNoise
@@ -126,9 +140,11 @@ proc execute*(s: var seq[Signal], cmd: string) =
     of "mul": s.word(mul, "mul")
     of "div": s.word(`div`, "div")
     of "mod": s.word(`mod`, "mod")
+    of "exp": s.word(exp, "exp")
     of "clip": s.word(clip, "clip", -1.0, 1.0)
     of "wrap": s.word(wrap, "wrap", -1.0, 1.0)
     of "circle": s.word(circle, "circle")
+    of "unit": s.word(unit, "unit")
     of "clausen": s.word(clausen, "clausen", 100)
     of "pan": s.word(pan, "pan")
     of "sh": s.word(sampleAndHold, "sh")
@@ -141,6 +157,8 @@ proc execute*(s: var seq[Signal], cmd: string) =
     of "bqhpf": s.word(biQuadHPF, "bqhpf")
     of "h": s.word(biQuadHPF, "bqhpf", 0.7071)
     of "fb": s.word(feedback, "fb")
+    of "impulse": s.word(impulse, "impulse")
+    of "project": s.word(project, "project")
     else:
       var x: Signal
       try:

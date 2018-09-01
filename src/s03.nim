@@ -65,7 +65,9 @@ proc pitch*(x: Signal, cycles: int = 10): Signal =
   proc f(ctx: Context): float =
     let m = m.f(ctx)
     if m > 0:
-      result = (cycles * ctx.sampleRate).toFloat / m
+      return (cycles * ctx.sampleRate).toFloat / m
+    else:
+      return ctx.sampleRate.toFloat
   Signal(f: f, label: "pitch(" && x.label && ")")
 
 proc lpfFreqToAlpha(ctx: Context, freq: float): float =
@@ -150,5 +152,7 @@ proc adaptivePitch*(x: Signal, cycles: int = 10): Signal =
     if m > 0:
       result = (cycles * ctx.sampleRate).toFloat / m
       freqs[ctx.channel].set(result)
+    else:
+      return ctx.sampleRate.toFloat
   Signal(f: f, label: "adaptivePitch(" && x.label && ")").mult
 

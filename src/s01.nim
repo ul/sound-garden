@@ -33,6 +33,7 @@ proc pulse*(freq: Signal, width: Signal = 0.5, phase0: Signal = 0): Signal =
   freq.saw(phase0).rectangle(width)
 
 let circle* = linlin(-1, 1, -PI, PI).toSignal("circle")
+let unit* = linlin(-1, 1, 0, 1).toSignal("unit")
 
 proc sin*(phase: Signal): Signal = 
   Signal(

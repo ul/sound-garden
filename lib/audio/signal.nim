@@ -57,3 +57,4 @@ proc linlin*(a, b, c, d: float): FF =
   proc f(x: float): float = k * (x - a) + c
   return f
 
+let sampleNumber* = Signal(f: proc(ctx: Context): float = ctx.sampleNumber.toFloat, label: "sampleNumber")

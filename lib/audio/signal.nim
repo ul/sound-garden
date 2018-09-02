@@ -104,3 +104,4 @@ proc recur*(function: Function4): Function3 =
 
 let sampleNumber* = Signal(f: proc(ctx: Context): float = ctx.sampleNumber.toFloat, label: "sampleNumber")
 let sampleRate* = Signal(f: proc(ctx: Context): float = ctx.sampleRate.toFloat, label: "sampleRate")
+let sampleAngularPeriod* = Signal(f: proc(ctx: Context): float = ctx.sampleAngularPeriod, label: "sampleAngularPeriod")

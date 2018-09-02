@@ -121,6 +121,18 @@ proc `mod`*(a: Signal, b: Signal): Signal =
     label: "(" && a.label && " mod " && b.label && ")"
   )
 
+proc min*(a: Signal, b: Signal): Signal =
+  Signal(
+    f: proc(ctx: Context): float = min(a.f(ctx), b.f(ctx)),
+    label: "min(" && a.label && ", " && b.label && ")"
+  )
+
+proc max*(a: Signal, b: Signal): Signal =
+  Signal(
+    f: proc(ctx: Context): float = max(a.f(ctx), b.f(ctx)),
+    label: "max(" && a.label && ", " && b.label && ")"
+  )
+
 proc clip*(x: Signal, min: Signal = -1, max: Signal = 1): Signal =
   proc f(ctx: Context): float =
     let x = x.f(ctx)

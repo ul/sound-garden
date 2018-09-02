@@ -12,27 +12,21 @@ let silence* = 0
 # TODO is it skewed with unreachable 1.0?
 let whiteNoise* = Signal(f: proc(ctx: Context): float = rand(2.0) - 1.0, label: "whiteNoise")
 
-proc project*(x, c, d: Signal): Signal =
-  const a = -1.0
-  const b = 1.0
-  proc f(ctx: Context): float =
-    let x = x.f(ctx)
-    let c = c.f(ctx)
-    let d = d.f(ctx)
-    return (d - c) * (x - a) / (b - a) + c
-  Signal(f: f, label: "project(" && x.label && ", " && c.label && ", " && d.label && ")")
+proc project*(x, a, b, c, d: Signal): Signal =
+  result = (d - c) * (x - a) / (b - a) + c
+  result.label = "project(" &&
+    x.label && ", " &&
+    a.label && ", " &&
+    b.label && ", " &&
+    c.label && ", " &&
+    d.label && ")"
 
-proc circle*(x: Signal): Signal = x.project(-PI, PI)
-proc unit*(x: Signal): Signal = x.project(0.0, 1.0)
+proc range*(x, a, b: Signal): Signal = x.project(-1, 1, a, b)
+proc circle*(x: Signal): Signal = x.range(-PI, PI)
+proc unit*(x: Signal): Signal = x.range(0.0, 1.0)
 
-proc sampleAndHold*(trig: Signal, x: Signal): Signal =
-  var samples: array[SOUNDIO_MAX_CHANNELS, float]
-  proc f(ctx: Context): float =
-    let i = ctx.channel
-    let t = trig.f(ctx)
-    let x = x.f(ctx)
-    result = samples[i] * (1-t) + x * t
-    samples[i] = result
-  Signal(f: f, label: "sampleAndHold(" && trig.label && ", " && x.label && ")").mult
+proc sampleAndHoldZ(previous, t, x: Signal): Signal =
+  result = (1 - t) * previous + t * x
+  result.label = "sampleAndHold(" && t.label && ", " && x.label && ")"
 
-
+let sampleAndHold* =  sampleAndHoldZ.recur

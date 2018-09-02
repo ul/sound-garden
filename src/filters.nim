@@ -5,26 +5,21 @@ import maths
 import soundio
 import std
 
-proc lpfFreqToAlpha(ctx: Context, freq: float): float =
-  let k = freq * ctx.sampleAngularPeriod
-  return k / (k + 1)
+proc lpfZ(previous, x, freq: Signal): Signal =
+  let k = freq * signal.sampleAngularPeriod
+  let α = k / (k + 1)
+  result = previous + α * (x - previous)
+  result.label = "lpf(" && x.label && ", " && freq.label && ")"
 
-proc lpf*(x: Signal, freq: Signal): Signal =
-  proc f(ctx: Context): float =
-    let α = ctx.lpfFreqToAlpha(freq.f(ctx))
-    result = ctx.lastSample + α * (x.f(ctx) - ctx.lastSample)
-  Signal(f: f, label: "lpf(" && x.label && ", " && freq.label && ")").mult
+let lpf* = lpfZ.recur
 
-proc hpfFreqToAlpha(ctx: Context, freq: float): float =
-  let k = freq * ctx.sampleAngularPeriod
-  return 1 / (k + 1)
+proc hpfZ(previous, x, freq: Signal): Signal =
+  let k = freq * signal.sampleAngularPeriod
+  let α = 1 / (k + 1)
+  result = α * (previous + x - x.prime)
+  result.label = "hpf(" && x.label && ", " && freq.label && ")"
 
-proc hpf*(x: Signal, freq: Signal): Signal =
-  let lastX = x.prime
-  proc f(ctx: Context): float =
-    let α = ctx.hpfFreqToAlpha(freq.f(ctx))
-    result = α * (ctx.lastSample + x.f(ctx) - lastX.f(ctx))
-  Signal(f: f, label: "hpf(" && x.label && ", " && freq.label && ")").mult
+let hpf* = hpfZ.recur
 
 proc makeBiQuadFilter(makeCoefficients: proc(sinω, cosω, α: float): array[6, float]):
   proc(x, freq: Signal, Q: Signal = 0.7071): Signal =
@@ -76,8 +71,8 @@ proc biQuadHPF*(x, freq: Signal, Q: Signal = 0.7071): Signal =
   result = makeBiQuadHPF(x, freq, Q)
   result.label = "biQuadHPF(" && x.label && ", " && freq.label && ", " && Q.label && ")"
 
-proc feedbackSeed(previous, x, delayTime, gain: Signal): Signal =
+proc feedbackZ(previous, x, delayTime, gain: Signal): Signal =
   result = x + gain * previous.delay(delayTime, 5 * 48000) # max delay 5 seconds @ 48000 sample rate
   result.label = "feedback(" && x.label && ", " && delayTime.label && ", " && gain.label && ")"
 
-let feedback* = feedbackSeed.recur
+let feedback* = feedbackZ.recur

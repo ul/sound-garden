@@ -23,17 +23,17 @@ let hpf* = hpfZ.recur
 
 proc makeBiQuadFilter(makeCoefficients: proc(sinω, cosω, α: float): array[6, float]):
   proc(x, freq: Signal, Q: Signal = 0.7071): Signal =
-  proc filter(x, freq: Signal, Q: Signal = 1): Signal =
+  proc filterZ(y1, x, freq: Signal, Q: Signal = 1): Signal =
     let x1 = x.prime
     let x2 = x1.prime
-    var y2s: array[SOUNDIO_MAX_CHANNELS, float]
+    let y2 = y1.prime
     proc f(ctx: Context): float =
       let i    = ctx.channel
       let x    = x.f(ctx)
       let x1   = x1.f(ctx)
       let x2   = x2.f(ctx)
-      let y1   = ctx.lastSample
-      let y2   = y2s[i]
+      let y1   = y1.f(ctx)
+      let y2   = y2.f(ctx)
       let ω    = freq.f(ctx) * ctx.sampleAngularPeriod
       let sinω = ω.sin
       let cosω = ω.cos
@@ -46,9 +46,8 @@ proc makeBiQuadFilter(makeCoefficients: proc(sinω, cosω, α: float): array[6, 
       let a1   = c[4]
       let a2   = c[5]
       result   = (x * b0 + x1 * b1 + x2 * b2 - y1 * a1 - y2 * a2) / a0
-      y2s[i]   = y1
-    Signal(f: f, label: x.label).mult
-  return filter
+    Signal(f: f, label: x.label)
+  return filterZ.recur
 
 proc makeLPFCoefficients(sinω, cosω, α: float): array[6, float] =
   let b1 = 1.0 - cosω

@@ -8,7 +8,11 @@ type
     f*: proc(ctx: Context): float
     label*: string
   FF = proc(x: float): float
-  Function = proc(x: Signal): Signal
+  Function0 = proc(): Signal
+  Function1 = proc(x: Signal): Signal
+  Function2 = proc(x, y: Signal): Signal
+  Function3 = proc(x, y, z: Signal): Signal
+  Function4 = proc(x, y, z, a: Signal): Signal
 
 converter toSignal*(x: float): Signal =
   proc f(ctx: Context): float = x
@@ -24,21 +28,23 @@ converter toSignal*(x: Box[int]): Signal =
   proc f(ctx: Context): float = x.get.toFloat
   Signal(f: f, label: "Box")
 
-proc toSignal*(x: FF, label: string = "f"): Function =
-  proc function(input: Signal): Signal =
-    proc f(ctx: Context): float = x(input.f(ctx))
-    Signal(f: f, label: label && "(" && input.label && ")")
+proc toSignal*(map: FF, label: string = "f"): Function1 =
+  proc function(x: Signal): Signal =
+    proc f(ctx: Context): float = map(x.f(ctx))
+    Signal(f: f, label: label && "(" && x.label && ")")
   return function
 
-proc channel*(s: Signal, i: int = 0): Signal =
+proc channel*(x: Signal, i: int = 0): Signal =
   var sample: float
   proc f(ctx: Context): float =
     if ctx.channel == i:
-      sample = s.f(ctx)
+      sample = x.f(ctx)
     sample
-  Signal(f: f, label: "channel " & $i & " of " && s.label)
+  Signal(f: f, label: "channel " & $i & " of " && x.label)
 
-proc mult*(s: Signal): Signal =
+# TODO review concept and implementation of lastSample
+# meanwhile please don't use it actively to avoid huge refactor
+proc mult*(x: Signal): Signal =
   var samples: array[SOUNDIO_MAX_CHANNELS, float]
   var sampleNumbers: array[SOUNDIO_MAX_CHANNELS, int]
   proc f(ctx: Context): float =
@@ -47,14 +53,54 @@ proc mult*(s: Signal): Signal =
       sampleNumbers[i] = ctx.sampleNumber
       let lastSample = ctx.lastSample
       ctx.lastSample = samples[i]
-      samples[i] = s.f(ctx)
+      samples[i] = x.f(ctx)
       ctx.lastSample = lastSample
     return samples[i]
-  Signal(f: f, label: s.label)
+  Signal(f: f, label: x.label)
 
-proc linlin*(a, b, c, d: float): FF =
-  let k = (d - c) / (b - a)
-  proc f(x: float): float = k * (x - a) + c
-  return f
+proc prime*(x: Signal): Signal =
+  var samples: array[SOUNDIO_MAX_CHANNELS, float]
+  proc f(ctx: Context): float =
+    let i = ctx.channel
+    result = samples[i]
+    samples[i] = x.f(ctx)
+  Signal(f: f, label: "prime(" && x.label && ")").mult
+
+proc recur*(function: Function1): Function0 =
+  proc recursiveFunction(): Signal =
+    let feedbackProxy = Signal()
+    result = function(feedbackProxy)
+    let actualFeedback = result.prime
+    proc f(ctx: Context): float = actualFeedback.f(ctx)
+    feedbackProxy.f = f
+  return recursiveFunction
+
+proc recur*(function: Function2): Function1 =
+  proc recursiveFunction(x: Signal): Signal =
+    let feedbackProxy = Signal()
+    result = function(feedbackProxy, x)
+    let actualFeedback = result.prime
+    proc f(ctx: Context): float = actualFeedback.f(ctx)
+    feedbackProxy.f = f
+  return recursiveFunction
+
+proc recur*(function: Function3): Function2 =
+  proc recursiveFunction(x, y: Signal): Signal =
+    let feedbackProxy = Signal()
+    result = function(feedbackProxy, x, y)
+    let actualFeedback = result.prime
+    proc f(ctx: Context): float = actualFeedback.f(ctx)
+    feedbackProxy.f = f
+  return recursiveFunction
+
+proc recur*(function: Function4): Function3 =
+  proc recursiveFunction(x, y, z: Signal): Signal =
+    let feedbackProxy = Signal()
+    result = function(feedbackProxy, x, y, z)
+    let actualFeedback = result.prime
+    proc f(ctx: Context): float = actualFeedback.f(ctx)
+    feedbackProxy.f = f
+  return recursiveFunction
 
 let sampleNumber* = Signal(f: proc(ctx: Context): float = ctx.sampleNumber.toFloat, label: "sampleNumber")
+let sampleRate* = Signal(f: proc(ctx: Context): float = ctx.sampleRate.toFloat, label: "sampleRate")

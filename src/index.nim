@@ -24,6 +24,11 @@ echo "Sample Rate:\t", dac.stream.sampleRate
 echo "Channels:\t", dac.stream.layout.channelCount
 echo "Latency:\t", (1000.0 * dac.stream.softwareLatency).round(1), " ms"
 
+proc linlin*(a, b, c, d: float): proc(x: float): float =
+  let k = (d - c) / (b - a)
+  proc f(x: float): float = k * (x - a) + c
+  return f
+
 proc wave*(step: int = 1) =
   let monitor = dac.monitor
   let channelCount = dac.stream.layout.channelCount

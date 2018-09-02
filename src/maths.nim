@@ -121,26 +121,71 @@ proc `mod`*(a: Signal, b: Signal): Signal =
     label: "(" && a.label && " mod " && b.label && ")"
   )
 
-proc clip*(input: Signal, min: Signal = -1, max: Signal = 1): Signal =
+proc clip*(x: Signal, min: Signal = -1, max: Signal = 1): Signal =
   proc f(ctx: Context): float =
-    let x = input.f(ctx)
+    let x = x.f(ctx)
     let a = min.f(ctx)
     let b = max.f(ctx)
     return if x < a: a elif x > b: b else: x
   Signal(
     f: f,
-    label: "clip(" && input.label && ", " && min.label && ", " && max.label && ")"
+    label: "clip(" && x.label && ", " && min.label && ", " && max.label && ")"
   )
 
-proc wrap*(input: Signal, min: Signal = -1, max: Signal = 1): Signal =
+proc wrap*(x: Signal, min: Signal = -1, max: Signal = 1): Signal =
   proc f(ctx: Context): float =
-    let x = input.f(ctx)
+    let x = x.f(ctx)
     let a = min.f(ctx)
     let b = max.f(ctx)
-    return (x - a) mod (b - a) + a 
+    return (x - a) mod (b - a) + a
   Signal(
     f: f,
-    label: "wrap(" && input.label && ", " && min.label && ", " && max.label && ")"
+    label: "wrap(" && x.label && ", " && min.label && ", " && max.label && ")"
   )
 
 let exp* = exp.toSignal("exp")
+
+proc sin*(phase: Signal): Signal =
+  Signal(
+    f: proc(ctx: Context): float = sin(PI * phase.f(ctx)),
+    label: "sin(" && phase.label && ")"
+  )
+
+proc cos*(phase: Signal): Signal =
+  Signal(
+    f: proc(ctx: Context): float = cos(PI * phase.f(ctx)),
+    label: "cos(" && phase.label && ")"
+  )
+
+proc tan*(phase: Signal): Signal =
+  Signal(
+    f: proc(ctx: Context): float = tan(PI * phase.f(ctx)),
+    label: "tan(" && phase.label && ")"
+  )
+
+proc sinh*(phase: Signal): Signal =
+  Signal(
+    f: proc(ctx: Context): float = sinh(PI * phase.f(ctx)),
+    label: "sinh(" && phase.label && ")"
+  )
+
+proc cosh*(phase: Signal): Signal =
+  Signal(
+    f: proc(ctx: Context): float = cosh(PI * phase.f(ctx)),
+    label: "cosh(" && phase.label && ")"
+  )
+
+proc tanh*(phase: Signal): Signal =
+  Signal(
+    f: proc(ctx: Context): float = tanh(PI * phase.f(ctx)),
+    label: "tanh(" && phase.label && ")"
+  )
+
+proc clausen*(phase: Signal, n: int = 100): Signal =
+  proc f(ctx: Context): float =
+    result = 0
+    let phi = PI * phase.f(ctx)
+    for i in 1..n:
+      let k = i.toFloat
+      result += sin(k*phi)/(k*k)
+  Signal(f: f,  label: "clausen(" && phase.label && ")")

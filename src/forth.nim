@@ -1,5 +1,12 @@
+import analyzers
 import audio/signal
-import s00, s01, s02, s03, s04
+import basics
+import delays
+import envelopes
+import filters
+import maths
+import oscillators
+import spats
 import strutils
 
 const stackMarkers = ["⓪", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨"]
@@ -30,6 +37,12 @@ proc word(s: var seq[Signal], f: proc(x, y, _: Signal): Signal, label: string, z
   let x = s.pop
   result = f(x, y, z) 
   result.label = x.label & " " & y.label & " " & z.label & " "  & label
+
+proc word(s: var seq[Signal], f: proc(x, y: Signal, _: int): Signal, label: string, z: int): Signal =
+  let y = s.pop
+  let x = s.pop
+  result = f(x, y, z) 
+  result.label = x.label & " " & y.label & " " & label
 
 proc word(s: var seq[Signal], f: proc(x, a, b: Signal): Signal, label: string, y, z: Signal): Signal =
   let x = s.pop
@@ -159,6 +172,7 @@ proc execute*(s: var seq[Signal], cmd: string) =
     of "fb": s.word(feedback, "fb")
     of "impulse": s.word(impulse, "impulse")
     of "project": s.word(project, "project")
+    of "delay": s.word(delay, "delay", 5*48000)
     else:
       var x: Signal
       try:

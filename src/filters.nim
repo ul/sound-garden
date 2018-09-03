@@ -75,3 +75,9 @@ proc feedbackZ(previous, x, delayTime, gain: Signal): Signal =
   result.label = "feedback(" && x.label && ", " && delayTime.label && ", " && gain.label && ")"
 
 let feedback* = feedbackZ.recur
+
+proc smoothFeedbackZ(previous, x, delayTime, gain: Signal): Signal =
+  result = x + gain * previous.smoothDelay(delayTime, 32, 5 * 48000) # max delay 5 seconds @ 48000 sample rate
+  result.label = "feedback(" && x.label && ", " && delayTime.label && ", " && gain.label && ")"
+
+let smoothFeedback* = smoothFeedbackZ.recur

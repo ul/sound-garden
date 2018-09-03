@@ -72,6 +72,14 @@ proc `==`*(x: Signal, y: Signal): Signal =
       return 0.0
   Signal(f: f, label: "(" && x.label && " == " && y.label && ")")
 
+proc `!=`*(x: Signal, y: Signal): Signal =
+  proc f(ctx: Context): float =
+    if x.f(ctx) != y.f(ctx):
+      return 1.0
+    else:
+      return 0.0
+  Signal(f: f, label: "(" && x.label && " != " && y.label && ")")
+
 proc `<`*(x: Signal, y: Signal): Signal =
   proc f(ctx: Context): float =
     if x.f(ctx) < y.f(ctx):
@@ -105,6 +113,7 @@ proc `>=`*(x: Signal, y: Signal): Signal =
   Signal(f: f, label: "(" && x.label && " >= " && y.label && ")")
 
 proc equal*(x: Signal, y: Signal): Signal = x == y
+proc notEqual*(x: Signal, y: Signal): Signal = x != y
 proc less*(x: Signal, y: Signal): Signal = x < y
 proc lessEqual*(x: Signal, y: Signal): Signal = x <= y
 proc greater*(x: Signal, y: Signal): Signal = x > y

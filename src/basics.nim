@@ -30,3 +30,9 @@ proc sampleAndHoldZ(previous, t, x: Signal): Signal =
   result.label = "sampleAndHold(" && t.label && ", " && x.label && ")"
 
 let sampleAndHold* =  sampleAndHoldZ.recur
+
+proc db2amp*(x: float): float = 20.0 * x.log10
+proc amp2db*(x: float): float = 10.pow(x / 20.0)
+
+proc freq2midi*(x: float): float = 69.0 + 12.0 * log2(x / 440.0)
+proc midi2freq*(x: float): float = 440.0 * 2.pow((x - 69.0) / 12.0)

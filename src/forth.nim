@@ -29,19 +29,19 @@ proc word(s: var seq[Signal], f: proc(x: Signal, _: int): Signal, label: string,
 proc word(s: var seq[Signal], f: proc(x, y: Signal): Signal, label: string): Signal =
   let y = s.pop
   let x = s.pop
-  result = f(x, y) 
+  result = f(x, y)
   result.label = x.label & " " & y.label & " " & label
 
 proc word(s: var seq[Signal], f: proc(x, y, _: Signal): Signal, label: string, z: Signal): Signal =
   let y = s.pop
   let x = s.pop
-  result = f(x, y, z) 
+  result = f(x, y, z)
   result.label = x.label & " " & y.label & " " & z.label & " "  & label
 
 proc word(s: var seq[Signal], f: proc(x, y: Signal, _: int): Signal, label: string, z: int): Signal =
   let y = s.pop
   let x = s.pop
-  result = f(x, y, z) 
+  result = f(x, y, z)
   result.label = x.label & " " & y.label & " " & label
 
 proc word(s: var seq[Signal], f: proc(x, a, b: Signal): Signal, label: string, y, z: Signal): Signal =
@@ -53,16 +53,14 @@ proc word(s: var seq[Signal], f: proc(x, y, z: Signal): Signal, label: string): 
   let z = s.pop
   let y = s.pop
   let x = s.pop
-  result = f(x, y, z) 
+  result = f(x, y, z)
   result.label = x.label & " " & y.label & " " & z.label & " "  & label
 
-proc word(s: var seq[Signal], f: proc(a, b, c, d: Signal): Signal, label: string): Signal =
-  let d = s.pop
-  let c = s.pop
+proc word(s: var seq[Signal], f: proc(a, b: Signal; c, d: int): Signal, label: string, x, y: int): Signal =
   let b = s.pop
   let a = s.pop
-  result = f(a, b, c, d) 
-  result.label = a.label & " " & b.label & " " & c.label & " " & d.label & label
+  result = f(a, b, x, y)
+  result.label = a.label & " " & b.label & " " & label
 
 proc word(s: var seq[Signal], f: proc(a, b, c, d, e: Signal): Signal, label: string): Signal =
   let e = s.pop
@@ -70,7 +68,7 @@ proc word(s: var seq[Signal], f: proc(a, b, c, d, e: Signal): Signal, label: str
   let c = s.pop
   let b = s.pop
   let a = s.pop
-  result = f(a, b, c, d, e) 
+  result = f(a, b, c, d, e)
   result.label = a.label & " " & b.label & " " & c.label & " " & d.label & " " & e.label & label
 
 proc execute*(s: var seq[Signal], cmd: string) =
@@ -150,9 +148,11 @@ proc execute*(s: var seq[Signal], cmd: string) =
     of "cosh": s.word(cosh, "cosh")
     of "cosine": s.word(cosine, "cosine")
     of "delay": s.word(delay, "delay", 5*48000)
+    of "sdelay": s.word(smoothDelay, "sdelay", 32, 5*48000)
     of "div": s.word(`div`, "div")
     of "exp": s.word(exp, "exp")
     of "fb": s.word(feedback, "fb")
+    of "sfb": s.word(smoothFeedback, "sfb")
     of "h": s.word(biQuadHPF, "bqhpf", 0.7071)
     of "hcosine": s.word(hcosine, "hcosine")
     of "hpf": s.word(hpf, "hpf")
@@ -169,7 +169,7 @@ proc execute*(s: var seq[Signal], cmd: string) =
     of "noise": whiteNoise
     of "p": s.word(pulse, "pulse", 0)
     of "pan": s.word(pan, "pan")
-    of "pitch": s.word(adaptivePitch, "pitch", 10)
+    of "pitch": s.word(adaptivePitch, "pitch", 16)
     of "prime": s.word(prime, "prime")
     of "project": s.word(project, "project")
     of "pulse": s.word(pulse, "pulse")
@@ -193,6 +193,10 @@ proc execute*(s: var seq[Signal], cmd: string) =
     of "w": s.word(saw, "saw", 0)
     of "whiteNoise": whiteNoise
     of "wrap": s.word(wrap, "wrap", -1.0, 1.0)
+    of "db2amp", "db2a": s.word(db2amp.toSignal, "db2amp")
+    of "amp2db", "a2db": s.word(amp2db.toSignal, "amp2db")
+    of "freq2midi", "f2m": s.word(freq2midi.toSignal, "freq2midi")
+    of "midi2freq", "m2f": s.word(midi2freq.toSignal, "midi2freq")
     else:
       var x: Signal
       try:

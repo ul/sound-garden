@@ -28,7 +28,6 @@ proc makeBiQuadFilter(makeCoefficients: proc(sinω, cosω, α: float): array[6, 
     let x2 = x1.prime
     let y2 = y1.prime
     proc f(ctx: Context): float =
-      let i    = ctx.channel
       let x    = x.f(ctx)
       let x1   = x1.f(ctx)
       let x2   = x2.f(ctx)

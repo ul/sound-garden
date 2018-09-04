@@ -5,27 +5,29 @@ import maths
 import soundio
 import std
 
-proc lpfZ(previous, x, freq: Signal): Signal =
+proc lpf*(x, freq: Signal): Signal =
+  result = Signal()
+  let y = result.mult
   let k = freq * signal.sampleAngularPeriod
-  let α = k / (k + 1)
-  result = previous + α * (x - previous)
+  let α = k / (k + 1.0)
+  result.f = (y + α * (x - y)).f
   result.label = "lpf(" && x.label && ", " && freq.label && ")"
 
-let lpf* = lpfZ.recur
-
-proc hpfZ(previous, x, freq: Signal): Signal =
+proc hpf*(previous, x, freq: Signal): Signal =
+  result = Signal()
+  let y = result.mult
   let k = freq * signal.sampleAngularPeriod
-  let α = 1 / (k + 1)
-  result = α * (previous + x - x.prime)
+  let α = 1.0 / (k + 1.0)
+  result.f = (α * (y + x - x.prime)).f
   result.label = "hpf(" && x.label && ", " && freq.label && ")"
 
-let hpf* = hpfZ.recur
-
 proc makeBiQuadFilter(makeCoefficients: proc(sinω, cosω, α: float): array[6, float]):
-  proc(x, freq: Signal, Q: Signal = 0.7071): Signal =
-  proc filterZ(y1, x, freq: Signal, Q: Signal = 1): Signal =
+  proc(x, freq, Q: Signal): Signal =
+  proc filter(x, freq: Signal, Q: Signal = 0.7071): Signal =
+    result = Signal()
     let x1 = x.prime
     let x2 = x1.prime
+    let y1 = result.mult
     let y2 = y1.prime
     proc f(ctx: Context): float =
       let x    = x.f(ctx)
@@ -44,9 +46,10 @@ proc makeBiQuadFilter(makeCoefficients: proc(sinω, cosω, α: float): array[6, 
       let a0   = c[3]
       let a1   = c[4]
       let a2   = c[5]
-      result   = (x * b0 + x1 * b1 + x2 * b2 - y1 * a1 - y2 * a2) / a0
-    Signal(f: f, label: x.label)
-  return filterZ.recur
+      result = (x * b0 + x1 * b1 + x2 * b2 - y1 * a1 - y2 * a2) / a0
+    result.f = f
+    result.label = x.label
+  return filter
 
 proc makeLPFCoefficients(sinω, cosω, α: float): array[6, float] =
   let b1 = 1.0 - cosω
@@ -69,20 +72,20 @@ proc biQuadHPF*(x, freq: Signal, Q: Signal = 0.7071): Signal =
   result = makeBiQuadHPF(x, freq, Q)
   result.label = "biQuadHPF(" && x.label && ", " && freq.label && ", " && Q.label && ")"
 
-proc feedbackZ(previous, x, delayTime, gain: Signal): Signal =
-  result = x + gain * previous.delay(delayTime, 5 * 48000) # max delay 5 seconds @ 48000 sample rate
+proc feedback*(x, delayTime, gain: Signal): Signal =
+  result = Signal()
+  # max delay 5 seconds @ 48000 sample rate
+  result.f = (x + gain * result.mult.delay(delayTime, 5 * 48000)).f 
   result.label = "feedback(" && x.label && ", " && delayTime.label && ", " && gain.label && ")"
 
-let feedback* = feedbackZ.recur
-
-proc smoothFeedbackZ(previous, x, delayTime, gain: Signal): Signal =
-  result = x + gain * previous.smoothDelay(delayTime, 32, 5 * 48000) # max delay 5 seconds @ 48000 sample rate
+proc smoothFeedback*(x, delayTime, gain: Signal): Signal =
+  result = Signal()
+  # max delay 5 seconds @ 48000 sample rate
+  result.f = (x + gain * result.mult.smoothDelay(delayTime, 32, 5 * 48000)).f
   result.label = "smoothFeedback(" && x.label && ", " && delayTime.label && ", " && gain.label && ")"
 
-let smoothFeedback* = smoothFeedbackZ.recur
-
-proc smoothestFeedbackZ(previous, x, delayTime, gain: Signal): Signal =
-  result = x + gain * previous.smoothestDelay(delayTime, 32, 5 * 48000) # max delay 5 seconds @ 48000 sample rate
+proc smoothestFeedback*(x, delayTime, gain: Signal): Signal =
+  result = Signal()
+  # max delay 5 seconds @ 48000 sample rate
+  result.f = (x + gain * result.mult.smoothestDelay(delayTime, 32, 5 * 48000)).f
   result.label = "smoothestFeedback(" && x.label && ", " && delayTime.label && ", " && gain.label && ")"
-
-let smoothestFeedback* = smoothestFeedbackZ.recur

@@ -8,6 +8,7 @@ import maths
 import oscillators
 import spats
 import strutils
+import triggers
 
 const stackMarkers = ["⓪", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨"]
 
@@ -165,6 +166,7 @@ proc execute*(s: var seq[Signal], cmd: string) =
     of "lpf": s.word(lpf, "lpf")
     of "max": s.word(max, "max")
     of "min": s.word(min, "min")
+    of "metro": s.word(metro, "metro")
     of "mod": s.word(`mod`, "mod")
     of "mul": s.word(mul, "mul")
     of "n": whiteNoise

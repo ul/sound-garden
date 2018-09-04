@@ -5,7 +5,6 @@ type
     channel*: int
     sampleNumber*: int
     sampleRate*: int
-    lastSample*: float
 
 const TWOPI* = 2.0 * PI
 

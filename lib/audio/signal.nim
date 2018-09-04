@@ -56,8 +56,6 @@ proc channel*(x: Signal, i: int = 0): Signal =
     sample
   Signal(f: f, label: "channel " & $i & " of " && x.label)
 
-# TODO review concept and implementation of lastSample
-# meanwhile please don't use it actively to avoid huge refactor
 proc mult*(x: Signal): Signal =
   var samples: array[SOUNDIO_MAX_CHANNELS, float]
   var sampleNumbers: array[SOUNDIO_MAX_CHANNELS, int]
@@ -65,10 +63,7 @@ proc mult*(x: Signal): Signal =
     let i = ctx.channel
     if ctx.sampleNumber > sampleNumbers[i]:
       sampleNumbers[i] = ctx.sampleNumber
-      let lastSample = ctx.lastSample
-      ctx.lastSample = samples[i]
       samples[i] = x.f(ctx)
-      ctx.lastSample = lastSample
     return samples[i]
   Signal(f: f, label: x.label)
 
@@ -79,42 +74,6 @@ proc prime*(x: Signal): Signal =
     result = samples[i]
     samples[i] = x.f(ctx)
   Signal(f: f, label: "prime(" && x.label && ")").mult
-
-proc recur*(function: Function1): Function0 =
-  proc recursiveFunction(): Signal =
-    let feedbackProxy = Signal()
-    result = function(feedbackProxy)
-    let actualFeedback = result.prime
-    proc f(ctx: Context): float = actualFeedback.f(ctx)
-    feedbackProxy.f = f
-  return recursiveFunction
-
-proc recur*(function: Function2): Function1 =
-  proc recursiveFunction(x: Signal): Signal =
-    let feedbackProxy = Signal()
-    result = function(feedbackProxy, x)
-    let actualFeedback = result.prime
-    proc f(ctx: Context): float = actualFeedback.f(ctx)
-    feedbackProxy.f = f
-  return recursiveFunction
-
-proc recur*(function: Function3): Function2 =
-  proc recursiveFunction(x, y: Signal): Signal =
-    let feedbackProxy = Signal()
-    result = function(feedbackProxy, x, y)
-    let actualFeedback = result.prime
-    proc f(ctx: Context): float = actualFeedback.f(ctx)
-    feedbackProxy.f = f
-  return recursiveFunction
-
-proc recur*(function: Function4): Function3 =
-  proc recursiveFunction(x, y, z: Signal): Signal =
-    let feedbackProxy = Signal()
-    result = function(feedbackProxy, x, y, z)
-    let actualFeedback = result.prime
-    proc f(ctx: Context): float = actualFeedback.f(ctx)
-    feedbackProxy.f = f
-  return recursiveFunction
 
 let sampleNumber* = Signal(f: proc(ctx: Context): float = ctx.sampleNumber.toFloat, label: "sampleNumber")
 let sampleRate* = Signal(f: proc(ctx: Context): float = ctx.sampleRate.toFloat, label: "sampleRate")

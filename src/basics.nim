@@ -25,11 +25,11 @@ proc range*(x, a, b: Signal): Signal = x.project(-1, 1, a, b)
 proc circle*(x: Signal): Signal = x.range(-PI, PI)
 proc unit*(x: Signal): Signal = x.range(0.0, 1.0)
 
-proc sampleAndHoldZ(previous, t, x: Signal): Signal =
-  result = (1 - t) * previous + t * x
+proc sampleAndHold*(t, x: Signal): Signal =
+  result = Signal()
+  let y = result.mult
+  result.f = ((1.0 - t) * y + t * x).f
   result.label = "sampleAndHold(" && t.label && ", " && x.label && ")"
-
-let sampleAndHold* =  sampleAndHoldZ.recur
 
 proc db2amp*(x: float): float = 20.0 * x.log10
 proc amp2db*(x: float): float = 10.pow(x / 20.0)

@@ -210,3 +210,38 @@ proc clausen*(phase: Signal, n: int = 100): Signal =
       let k = i.toFloat
       result += sin(k*phi)/(k*k)
   Signal(f: f,  label: "clausen(" && phase.label && ")")
+
+proc fsin*(x: float): float {.inline.} =
+  var x = x
+  while x > PI:
+    x -= TWOPI
+  while x < -PI:
+    x += TWOPI
+
+  const coeffs = [
+    -0.10132118,          # x
+     0.0066208798,        # x^3
+    -0.00017350505,       # x^5
+     0.0000025222919,     # x^7
+    -0.000000023317787,   # x^9
+     0.00000000013291342, # x^11
+  ]
+  const pi_major = 3.1415927
+  const pi_minor = -0.00000008742278
+  const pi = pi_major + pi_minor
+
+  let x2 = x * x
+  const p11 = coeffs[5]
+  let p9  = p11 * x2 + coeffs[4]
+  let p7  = p9  * x2 + coeffs[3]
+  let p5  = p7  * x2 + coeffs[2]
+  let p3  = p5  * x2 + coeffs[1]
+  let p1  = p3  * x2 + coeffs[0]
+  # result = (x - pi_major - pi_minor) * (x + pi_major + pi_minor) * p1 * x
+  result = (x - pi) * (x + pi) * p1 * x
+
+proc fsin*(phase: Signal): Signal =
+  Signal(
+    f: proc(ctx: Context): float = fsin(PI * phase.f(ctx)),
+    label: "fsin(" && phase.label && ")"
+  )

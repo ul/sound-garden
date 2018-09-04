@@ -34,7 +34,7 @@ proc rectangle*(phase: Signal, width: Signal = 0.5): Signal =
 proc pulse*(freq: Signal, width: Signal = 0.5, phase0: Signal = 0): Signal =
   freq.saw(phase0).rectangle(width)
 
-proc sine*(freq: Signal, phase0: Signal = 0): Signal = freq.saw(phase0).sin
+proc sine*(freq: Signal, phase0: Signal = 0): Signal = freq.saw(phase0).fsin
 proc cosine*(freq: Signal, phase0: Signal = 0): Signal = freq.saw(phase0).cos
 proc tangent*(freq: Signal, phase0: Signal = 0): Signal = freq.saw(phase0).tan
 proc hsine*(freq: Signal, phase0: Signal = 0): Signal = freq.saw(phase0).sinh

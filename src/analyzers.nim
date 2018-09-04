@@ -62,3 +62,4 @@ proc adaptivePitch*(x: Signal, cycles: int = 16): Signal =
       return ctx.sampleRate.toFloat
   Signal(f: f, label: "adaptivePitch(" && x.label && ")").mult
 
+# TODO RMS, peak amp trackers, based on generic window, as in ad libitum

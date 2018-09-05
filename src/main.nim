@@ -1,12 +1,14 @@
 import audio/[audio, context, signal]
-import drawille
 import forth
 import math
-import osproc
 import soundio
 import std
 import strutils
 import tables
+import lo/[lo, lo_serverthread, lo_types, lo_osc_types]
+import wave
+
+let silence = 0.0.toSignal
 
 # Init audio system
 let rss = newSoundSystem()
@@ -34,58 +36,7 @@ for i in 0..<MAX_STREAMS:
     echo "Channels:\t", dac.stream.layout.channelCount
     echo "Latency:\t", (1000.0 * dac.stream.softwareLatency).round(1), " ms"
 
-let silence = 0.0.toSignal
-
-proc linlin*(a, b, c, d: float): proc(x: float): float =
-  let k = (d - c) / (b - a)
-  proc f(x: float): float = k * (x - a) + c
-  return f
-
-proc wave*(step: int = 1) =
-  let monitor = streams[currentStack].monitor
-  let channelCount = streams[currentStack].stream.layout.channelCount
-
-  let width = "tput cols".execProcess.strip.parseInt
-  let height = 8
-  let w = width * 2
-  let h = height * 4
-
-  if channelCount * step * w > monitor.capacity:
-    echo "step is too big"
-    return
-
-  var c = newCanvas(width, height)
-  var ys = newSeq[float](w)
-  var yMin = +Inf
-  var yMax = -Inf
-
-  for i in 0..<w:
-    let ptrSample = cast[ptr float](monitor.read_ptr)
-    let sample = ptrSample[]
-    ys[i] = sample
-    yMin = yMin.min(sample)
-    yMax = yMax.max(sample)
-    monitor.advance_read_ptr(cint(step * channelCount * float.sizeof))
-
-  let project = linlin(yMin, yMax, (h-1).toFloat, 0)
-  for i in 0..<w:
-    c.toggle(i, max(0, min(h-1, ys[i].project.toInt)))
-
-  echo "▲ ", yMax.round(3)
-  echo c
-  echo "▼ ", yMin.round(3)
-   
-  # ANSI codes to go clear the area we use for our drawing, might be useful for animation
-  # echo "\e[A\e[K".repeat(height+2)
-
-var line: string
-
-while true:
-  stdout.write "[", currentStack, "]> "
-  try:
-    line = stdin.readLine
-  except EOFError:
-    break
+proc interpret(line: string) =
   for cmd in line.strip.split:
     let c = cmd.split(":")
     case c[0]
@@ -93,7 +44,7 @@ while true:
       var step = 1
       if c.len > 1:
         step = c[1].parseInt
-      step.wave
+      streams[currentStack].wave(step)
     of "next":
       currentStack = (currentStack + 1) mod MAX_STREAMS
     of "prev":
@@ -165,3 +116,35 @@ while true:
     let s = stacks[i]
     streams[i].signal = if s.len > 0: s[s.high] else: silence
 
+### OSC
+proc error(num: cint; msg: cstring; where: cstring) {.cdecl.} =
+  echo "liblo server error ", num, " in path ", where, ": ", msg
+
+proc interpret_handler(path: cstring; types: cstring; argv: ptr ptr lo_arg; argc: cint; msg: lo_message; user_data: pointer): cint {.cdecl.} =
+  let arg0 = cast[ptr lo_arg](argv[])
+  let line = $arg0.s
+  line.interpret
+
+proc var_set_handler(path: cstring; types: cstring; argv: ptr ptr lo_arg; argc: cint; msg: lo_message; user_data: pointer): cint {.cdecl.} =
+  var path = $path
+  if not path.startsWith("/set/"):
+    return 1
+  path.removePrefix("/set/") 
+  let arg0 = cast[ptr lo_arg](argv[])
+  storage[path] = arg0.f.toSignal
+
+let oscServerThread = lo_server_thread_new("7770", error);
+discard lo_server_thread_add_method(oscServerThread, "/interpret", "s", interpret_handler, nil);
+discard lo_server_thread_add_method(oscServerThread, nil, "f", var_set_handler, nil);
+discard lo_server_thread_start(oscServerThread)
+
+### /OSC
+
+while true:
+  stdout.write "[", currentStack, "]> "
+  try:
+    stdin.readLine.interpret
+  except EOFError:
+    break
+
+lo_server_thread_free(oscServerThread)

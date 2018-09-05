@@ -15,7 +15,7 @@ const stackMarkers = ["⓪", "①", "②", "③", "④", "⑤", "⑥", "⑦", "�
 proc word(s: var seq[Signal], f: proc(x: Signal): Signal, label: string): Signal =
   if s.len < 1:
     echo "Stack is too short"
-    return nil
+    return
   let x = s.pop
   result = f(x)
   result.label = x.label & " " & label
@@ -23,7 +23,7 @@ proc word(s: var seq[Signal], f: proc(x: Signal): Signal, label: string): Signal
 proc word(s: var seq[Signal], f: proc(x, _: Signal): Signal, label: string, y: Signal): Signal =
   if s.len < 1:
     echo "Stack is too short"
-    return nil
+    return
   let x = s.pop
   result = f(x, y)
   result.label = x.label & " " & y.label & " " & label
@@ -31,7 +31,7 @@ proc word(s: var seq[Signal], f: proc(x, _: Signal): Signal, label: string, y: S
 proc word(s: var seq[Signal], f: proc(x: Signal, _: int): Signal, label: string, y: int): Signal =
   if s.len < 1:
     echo "Stack is too short"
-    return nil
+    return
   let x = s.pop
   result = f(x, y)
   result.label = x.label & " " & label
@@ -39,7 +39,7 @@ proc word(s: var seq[Signal], f: proc(x: Signal, _: int): Signal, label: string,
 proc word(s: var seq[Signal], f: proc(x, y: Signal): Signal, label: string): Signal =
   if s.len < 2:
     echo "Stack is too short"
-    return nil
+    return
   let y = s.pop
   let x = s.pop
   result = f(x, y)
@@ -48,7 +48,7 @@ proc word(s: var seq[Signal], f: proc(x, y: Signal): Signal, label: string): Sig
 proc word(s: var seq[Signal], f: proc(x, y, _: Signal): Signal, label: string, z: Signal): Signal =
   if s.len < 2:
     echo "Stack is too short"
-    return nil
+    return
   let y = s.pop
   let x = s.pop
   result = f(x, y, z)
@@ -57,7 +57,7 @@ proc word(s: var seq[Signal], f: proc(x, y, _: Signal): Signal, label: string, z
 proc word(s: var seq[Signal], f: proc(x, y: Signal, _: int): Signal, label: string, z: int): Signal =
   if s.len < 2:
     echo "Stack is too short"
-    return nil
+    return
   let y = s.pop
   let x = s.pop
   result = f(x, y, z)
@@ -66,7 +66,7 @@ proc word(s: var seq[Signal], f: proc(x, y: Signal, _: int): Signal, label: stri
 proc word(s: var seq[Signal], f: proc(x, a, b: Signal): Signal, label: string, y, z: Signal): Signal =
   if s.len < 1:
     echo "Stack is too short"
-    return nil
+    return
   let x = s.pop
   result = f(x, y, z)
   result.label = x.label & " " & y.label & " " & z.label & " "  & label
@@ -74,7 +74,7 @@ proc word(s: var seq[Signal], f: proc(x, a, b: Signal): Signal, label: string, y
 proc word(s: var seq[Signal], f: proc(x, y, z: Signal): Signal, label: string): Signal =
   if s.len < 3:
     echo "Stack is too short"
-    return nil
+    return
   let z = s.pop
   let y = s.pop
   let x = s.pop
@@ -84,7 +84,7 @@ proc word(s: var seq[Signal], f: proc(x, y, z: Signal): Signal, label: string): 
 proc word(s: var seq[Signal], f: proc(a, b: Signal; c, d: int): Signal, label: string, x, y: int): Signal =
   if s.len < 2:
     echo "Stack is too short"
-    return nil
+    return
   let b = s.pop
   let a = s.pop
   result = f(a, b, x, y)
@@ -93,7 +93,7 @@ proc word(s: var seq[Signal], f: proc(a, b: Signal; c, d: int): Signal, label: s
 proc word(s: var seq[Signal], f: proc(a, b, c, d, e: Signal): Signal, label: string): Signal =
   if s.len < 5:
     echo "Stack is too short"
-    return nil
+    return
   let e = s.pop
   let d = s.pop
   let c = s.pop
@@ -149,14 +149,14 @@ proc execute*(s: var seq[Signal], cmd: string) =
     else:
       echo "Stack is too short"
   of "dup":
-    if s.len > 1:
+    if s.len > 0:
       let x = s[s.high]
       let y = Signal(f: x.f, label: "(" & x.label & " dup)")
       s &= y
     else:
       echo "Stack is too short"
   of "ch0":
-    if s.len > 1:
+    if s.len > 0:
       let x = s.pop
       let y = x.channel(0)
       y.label = x.label & " ch0"
@@ -164,7 +164,7 @@ proc execute*(s: var seq[Signal], cmd: string) =
     else:
       echo "Stack is too short"
   of "ch1":
-    if s.len > 1:
+    if s.len > 0:
       let x = s.pop
       let y = x.channel(1)
       y.label = x.label & " ch1"

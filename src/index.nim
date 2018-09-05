@@ -13,16 +13,26 @@ if rss.kind == Err:
   quit rss.msg
 let ss = rss.value
 
-# Create default output stream with write callback ready to accept signal via userdata
-let ros = ss.newOutStream
-if ros.kind == Err:
-  quit ros.msg
-let dac = ros.value
-# TODO ensure that format is float32ne or support conversion
-echo "Format:\t\t", dac.stream.format
-echo "Sample Rate:\t", dac.stream.sampleRate
-echo "Channels:\t", dac.stream.layout.channelCount
-echo "Latency:\t", (1000.0 * dac.stream.softwareLatency).round(1), " ms"
+const MAX_STREAMS = 8
+var streams: array[MAX_STREAMS, OutStream]
+var stacks: array[MAX_STREAMS, seq[Signal]]
+var currentStack = 0
+
+for i in 0..<MAX_STREAMS:
+  let ros = ss.newOutStream
+  if ros.kind == Err:
+    quit ros.msg
+  let dac = ros.value
+  streams[i] = dac
+  stacks[i] = @[]
+  # TODO ensure that format is float32ne or support conversion
+  if i == 0:
+    echo "Format:\t\t", dac.stream.format
+    echo "Sample Rate:\t", dac.stream.sampleRate
+    echo "Channels:\t", dac.stream.layout.channelCount
+    echo "Latency:\t", (1000.0 * dac.stream.softwareLatency).round(1), " ms"
+
+let silence = 0.0.toSignal
 
 proc linlin*(a, b, c, d: float): proc(x: float): float =
   let k = (d - c) / (b - a)
@@ -30,8 +40,8 @@ proc linlin*(a, b, c, d: float): proc(x: float): float =
   return f
 
 proc wave*(step: int = 1) =
-  let monitor = dac.monitor
-  let channelCount = dac.stream.layout.channelCount
+  let monitor = streams[currentStack].monitor
+  let channelCount = streams[currentStack].stream.layout.channelCount
 
   let width = "tput cols".execProcess.strip.parseInt
   let height = 8
@@ -66,16 +76,10 @@ proc wave*(step: int = 1) =
   # ANSI codes to go clear the area we use for our drawing, might be useful for animation
   # echo "\e[A\e[K".repeat(height+2)
 
-const MAX_BRANCHES = 8
-var branches: array[MAX_BRANCHES, seq[Signal]]
-for i in 0..<MAX_BRANCHES:
-  branches[i] = @[]
-
-var currentBranch = 0
 var line: string
 
 while true:
-  stdout.write "> "
+  stdout.write currentStack, " > "
   try:
     line = stdin.readLine
   except EOFError:
@@ -89,11 +93,44 @@ while true:
         step = c[1].parseInt
       step.wave
     of "next":
-      currentBranch = (currentBranch + 1) mod MAX_BRANCHES
+      currentStack = (currentStack + 1) mod MAX_STREAMS
     of "prev":
-      currentBranch = (currentBranch - 1 + MAX_BRANCHES) mod MAX_BRANCHES
+      currentStack = (currentStack - 1 + MAX_STREAMS) mod MAX_STREAMS
+    of "mv>":
+      if stacks[currentStack].len > 0:
+        let i = (currentStack + 1) mod MAX_STREAMS
+        stacks[i] &= stacks[currentStack].pop
+    of "<mv":
+      if stacks[currentStack].len > 0:
+        let i = (currentStack - 1 + MAX_STREAMS) mod MAX_STREAMS
+        stacks[i] &= stacks[currentStack].pop
+    of "mv<":
+      let i = (currentStack + 1) mod MAX_STREAMS
+      if stacks[i].len > 0:
+        stacks[currentStack] &= stacks[i].pop
+    of ">mv":
+      let i = (currentStack - 1 + MAX_STREAMS) mod MAX_STREAMS
+      if stacks[i].len > 0:
+        stacks[currentStack] &= stacks[i].pop
+    of "cp>":
+      if stacks[currentStack].len > 0:
+        let i = (currentStack + 1) mod MAX_STREAMS
+        stacks[i] &= stacks[currentStack][stacks[currentStack].high]
+    of "<cp":
+      if stacks[currentStack].len > 0:
+        let i = (currentStack - 1 + MAX_STREAMS) mod MAX_STREAMS
+        stacks[i] &= stacks[currentStack][stacks[currentStack].high]
+    of "cp<":
+      let i = (currentStack + 1) mod MAX_STREAMS
+      if stacks[i].len > 0:
+        stacks[currentStack] &= stacks[i][stacks[i].high]
+    of ">cp":
+      let i = (currentStack - 1 + MAX_STREAMS) mod MAX_STREAMS
+      if stacks[i].len > 0:
+        stacks[currentStack] &= stacks[i][stacks[i].high]
     else:
-      branches[currentBranch].execute(c[0])
-  let b = branches[currentBranch]
-  dac.signal = if b.len > 0: b[high(b)] else: 0
+      stacks[currentStack].execute(c[0])
+  for i in 0..<MAX_STREAMS:
+    let s = stacks[i]
+    streams[i].signal = if s.len > 0: s[high(s)] else: silence
 

@@ -6,6 +6,7 @@ import osproc
 import soundio
 import std
 import strutils
+import tables
 
 # Init audio system
 let rss = newSoundSystem()
@@ -17,6 +18,7 @@ const MAX_STREAMS = 8
 var streams: array[MAX_STREAMS, OutStream]
 var stacks: array[MAX_STREAMS, seq[Signal]]
 var currentStack = 0
+var storage = newTable[string, Signal]()
 
 for i in 0..<MAX_STREAMS:
   let ros = ss.newOutStream
@@ -79,7 +81,7 @@ proc wave*(step: int = 1) =
 var line: string
 
 while true:
-  stdout.write currentStack, " > "
+  stdout.write "[", currentStack, "]> "
   try:
     line = stdin.readLine
   except EOFError:
@@ -128,9 +130,38 @@ while true:
       let i = (currentStack - 1 + MAX_STREAMS) mod MAX_STREAMS
       if stacks[i].len > 0:
         stacks[currentStack] &= stacks[i][stacks[i].high]
+    of "var":
+      if c.len > 1:
+        if stacks[currentStack].len > 0:
+          let key = c[1]
+          storage[key] = stacks[currentStack].pop
+          stacks[currentStack] &= Signal(
+            f: proc(ctx: Context): float = storage[key].f(ctx),
+            label: cmd
+          )
+        else:
+          echo "Stack is too short"
+      else:
+        echo "Provide a key"
+    of "set":
+      if c.len > 1:
+        if stacks[currentStack].len > 0:
+          storage[c[1]] = stacks[currentStack].pop
+        else:
+          echo "Stack is too short"
+      else:
+        echo "Provide a key"
+    of "get":
+      if c.len > 1:
+        if storage.hasKey(c[1]):
+          stacks[currentStack] &= storage[c[1]]
+        else:
+          echo "Value is not set"
+      else:
+        echo "Provide a key"
     else:
-      stacks[currentStack].execute(c[0])
+      stacks[currentStack].execute(cmd)
   for i in 0..<MAX_STREAMS:
     let s = stacks[i]
-    streams[i].signal = if s.len > 0: s[high(s)] else: silence
+    streams[i].signal = if s.len > 0: s[s.high] else: silence
 

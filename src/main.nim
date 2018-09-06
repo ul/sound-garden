@@ -21,10 +21,12 @@ var streams: array[MAX_STREAMS, OutStream]
 var stacks: array[MAX_STREAMS, seq[Signal]]
 var currentStack = 0
 var storage = newTable[string, Signal]()
+var osc = newTable[string, Box[float]]()
 
 # pre-set variables for quick integration with OSC
 for k in 'a'..'z':
   storage[$k] = silence
+  osc[$k] = box(0.0)
 
 for i in 0..<MAX_STREAMS:
   let ros = ss.newOutStream
@@ -108,8 +110,8 @@ proc interpret(line: string) =
         echo "Provide a key"
     of "get":
       if c.len > 1:
-        if storage.hasKey(c[1]):
-          let key = c[1]
+        let key = c[1]
+        if storage.hasKey(key):
           stacks[currentStack] &= Signal(
             f: proc(ctx: Context): float = storage[key].f(ctx),
             label: "var:" & key
@@ -124,6 +126,14 @@ proc interpret(line: string) =
           stacks[currentStack] &= storage[c[1]]
         else:
           echo "Value is not set"
+      else:
+        echo "Provide a key"
+    of "osc":
+      if c.len > 1:
+        let key = c[1]
+        if not osc.hasKey(key):
+          osc[key] = box(0.0)
+        stacks[currentStack] &= osc[key].toSignal
       else:
         echo "Provide a key"
     else:
@@ -147,9 +157,12 @@ proc accxyz_handler(path: cstring; types: cstring; argv: ptr ptr lo_arg; argc: c
   let arg0 = cast[ptr lo_arg](argv[])
   let arg1 = cast[ptr lo_arg](cast[ptr ptr lo_arg](argvi + psz)[])
   let arg2 = cast[ptr lo_arg](cast[ptr ptr lo_arg](argvi + 2 * psz)[])
-  storage["x"] = arg0.f.toSignal
-  storage["y"] = arg1.f.toSignal
-  storage["z"] = arg2.f.toSignal
+  # storage["x"] = arg0.f.toSignal
+  # storage["y"] = arg1.f.toSignal
+  # storage["z"] = arg2.f.toSignal
+  osc["x"].set(arg0.f)
+  osc["y"].set(arg1.f)
+  osc["z"].set(arg2.f)
 
 proc var_set_handler(path: cstring; types: cstring; argv: ptr ptr lo_arg; argc: cint; msg: lo_message; user_data: pointer): cint {.cdecl.} =
   var path = $path
@@ -157,7 +170,11 @@ proc var_set_handler(path: cstring; types: cstring; argv: ptr ptr lo_arg; argc: 
     return 1
   path.removePrefix("/set/") 
   let arg0 = cast[ptr lo_arg](argv[])
-  storage[path] = arg0.f.toSignal
+  # storage[path] = arg0.f.toSignal
+  if not osc.hasKey(path):
+    osc[path] = box(0.0)
+  osc[path].set(arg0.f)
+
 
 let oscServerThread = lo_server_thread_new("7770", error);
 discard lo_server_thread_add_method(oscServerThread, "/interpret", "s", interpret_handler, nil);

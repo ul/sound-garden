@@ -12,6 +12,7 @@ let silence* = 0
 # TODO is it skewed with unreachable 1.0?
 let whiteNoise* = Signal(f: proc(ctx: Context): float = rand(2.0) - 1.0, label: "whiteNoise")
 
+# TODO exponential projection
 proc project*(x, a, b, c, d: Signal): Signal =
   result = (d - c) * (x - a) / (b - a) + c
   result.label = "project(" &&

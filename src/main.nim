@@ -22,6 +22,10 @@ var stacks: array[MAX_STREAMS, seq[Signal]]
 var currentStack = 0
 var storage = newTable[string, Signal]()
 
+# pre-set variables for quick integration with OSC
+for k in 'a'..'z':
+  storage[$k] = silence
+
 for i in 0..<MAX_STREAMS:
   let ros = ss.newOutStream
   if ros.kind == Err:
@@ -105,6 +109,18 @@ proc interpret(line: string) =
     of "get":
       if c.len > 1:
         if storage.hasKey(c[1]):
+          let key = c[1]
+          stacks[currentStack] &= Signal(
+            f: proc(ctx: Context): float = storage[key].f(ctx),
+            label: "var:" & key
+          )
+        else:
+          echo "Value is not set"
+      else:
+        echo "Provide a key"
+    of "unbox":
+      if c.len > 1:
+        if storage.hasKey(c[1]):
           stacks[currentStack] &= storage[c[1]]
         else:
           echo "Value is not set"
@@ -125,6 +141,16 @@ proc interpret_handler(path: cstring; types: cstring; argv: ptr ptr lo_arg; argc
   let line = $arg0.s
   line.interpret
 
+proc accxyz_handler(path: cstring; types: cstring; argv: ptr ptr lo_arg; argc: cint; msg: lo_message; user_data: pointer): cint {.cdecl.} =
+  let argvi = cast[int](argv)
+  let psz = pointer.sizeof
+  let arg0 = cast[ptr lo_arg](argv[])
+  let arg1 = cast[ptr lo_arg](cast[ptr ptr lo_arg](argvi + psz)[])
+  let arg2 = cast[ptr lo_arg](cast[ptr ptr lo_arg](argvi + 2 * psz)[])
+  storage["x"] = arg0.f.toSignal
+  storage["y"] = arg1.f.toSignal
+  storage["z"] = arg2.f.toSignal
+
 proc var_set_handler(path: cstring; types: cstring; argv: ptr ptr lo_arg; argc: cint; msg: lo_message; user_data: pointer): cint {.cdecl.} =
   var path = $path
   if not path.startsWith("/set/"):
@@ -135,6 +161,7 @@ proc var_set_handler(path: cstring; types: cstring; argv: ptr ptr lo_arg; argc: 
 
 let oscServerThread = lo_server_thread_new("7770", error);
 discard lo_server_thread_add_method(oscServerThread, "/interpret", "s", interpret_handler, nil);
+discard lo_server_thread_add_method(oscServerThread, "/accxyz", "fff", accxyz_handler, nil);
 discard lo_server_thread_add_method(oscServerThread, nil, "f", var_set_handler, nil);
 discard lo_server_thread_start(oscServerThread)
 

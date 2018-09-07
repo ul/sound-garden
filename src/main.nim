@@ -43,7 +43,7 @@ for i in 0..<MAX_STREAMS:
     echo "Latency:\t", (1000.0 * dac.stream.softwareLatency).round(1), " ms"
 
 proc interpret(line: string) =
-  for cmd in line.strip.split:
+  for cmd in line.splitWhitespace:
     let c = cmd.split(":")
     case c[0]
     of "wave":
@@ -59,35 +59,51 @@ proc interpret(line: string) =
       if stacks[currentStack].len > 0:
         let i = (currentStack + 1) mod MAX_STREAMS
         stacks[i] &= stacks[currentStack].pop
+      else:
+        echo "Nothing to move"
     of "<mv":
       if stacks[currentStack].len > 0:
         let i = (currentStack - 1 + MAX_STREAMS) mod MAX_STREAMS
         stacks[i] &= stacks[currentStack].pop
+      else:
+        echo "Nothing to move"
     of "mv<":
       let i = (currentStack + 1) mod MAX_STREAMS
       if stacks[i].len > 0:
         stacks[currentStack] &= stacks[i].pop
+      else:
+        echo "Nothing to move"
     of ">mv":
       let i = (currentStack - 1 + MAX_STREAMS) mod MAX_STREAMS
       if stacks[i].len > 0:
         stacks[currentStack] &= stacks[i].pop
+      else:
+        echo "Nothing to move"
     of "cp>":
       if stacks[currentStack].len > 0:
         let i = (currentStack + 1) mod MAX_STREAMS
         stacks[i] &= stacks[currentStack][stacks[currentStack].high]
+      else:
+        echo "Nothing to copy"
     of "<cp":
       if stacks[currentStack].len > 0:
         let i = (currentStack - 1 + MAX_STREAMS) mod MAX_STREAMS
         stacks[i] &= stacks[currentStack][stacks[currentStack].high]
+      else:
+        echo "Nothing to copy"
     of "cp<":
       let i = (currentStack + 1) mod MAX_STREAMS
       if stacks[i].len > 0:
         stacks[currentStack] &= stacks[i][stacks[i].high]
+      else:
+        echo "Nothing to copy"
     of ">cp":
       let i = (currentStack - 1 + MAX_STREAMS) mod MAX_STREAMS
       if stacks[i].len > 0:
         stacks[currentStack] &= stacks[i][stacks[i].high]
-    of "var":
+      else:
+        echo "Nothing to copy"
+    of "var", "box":
       if c.len > 1:
         if stacks[currentStack].len > 0:
           let key = c[1]
@@ -97,7 +113,7 @@ proc interpret(line: string) =
             label: cmd
           )
         else:
-          echo "Stack is too short"
+          echo "Stack is empty"
       else:
         echo "Provide a key"
     of "set":
@@ -105,7 +121,7 @@ proc interpret(line: string) =
         if stacks[currentStack].len > 0:
           storage[c[1]] = stacks[currentStack].pop
         else:
-          echo "Stack is too short"
+          echo "Stack is empty"
       else:
         echo "Provide a key"
     of "get":
@@ -133,7 +149,9 @@ proc interpret(line: string) =
         let key = c[1]
         if not osc.hasKey(key):
           osc[key] = box(0.0)
-        stacks[currentStack] &= osc[key].toSignal
+        let s = osc[key].toSignal
+        s.label = cmd
+        stacks[currentStack] &= s
       else:
         echo "Provide a key"
     else:
@@ -148,8 +166,8 @@ proc error(num: cint; msg: cstring; where: cstring) {.cdecl.} =
 
 proc interpret_handler(path: cstring; types: cstring; argv: ptr ptr lo_arg; argc: cint; msg: lo_message; user_data: pointer): cint {.cdecl.} =
   let arg0 = cast[ptr lo_arg](argv[])
-  let line = $arg0.s
-  line.interpret
+  let line: cstring = arg0.s.addr
+  ($line).interpret
 
 proc accxyz_handler(path: cstring; types: cstring; argv: ptr ptr lo_arg; argc: cint; msg: lo_message; user_data: pointer): cint {.cdecl.} =
   let argvi = cast[int](argv)
@@ -168,7 +186,7 @@ proc var_set_handler(path: cstring; types: cstring; argv: ptr ptr lo_arg; argc: 
   var path = $path
   if not path.startsWith("/set/"):
     return 1
-  path.removePrefix("/set/") 
+  path.removePrefix("/set/")
   let arg0 = cast[ptr lo_arg](argv[])
   # storage[path] = arg0.f.toSignal
   if not osc.hasKey(path):

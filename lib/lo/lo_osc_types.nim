@@ -93,27 +93,25 @@ type                          ##  basic OSC types
 ## 
 
 type
-  INNER_C_STRUCT_2917098053* {.bycopy.} = object
+  lo_arg_blob* {.bycopy.} = object
     size*: int32_t
     data*: char
 
   lo_arg* {.bycopy.} = object {.union.}
     i*: int32_t                ## * 32 bit signed integer.
-    ## * 32 bit signed integer.
-    i32*: int32_t              ## * 64 bit signed integer.
+    i32*: int32_t              ## * 32 bit signed integer.
     h*: int64_t                ## * 64 bit signed integer.
-    i64*: int64_t              ## * 32 bit IEEE-754 float.
+    i64*: int64_t              ## * 64 bit signed integer.
     f*: cfloat                 ## * 32 bit IEEE-754 float.
-    f32*: cfloat               ## * 64 bit IEEE-754 double.
+    f32*: cfloat               ## * 32 bit IEEE-754 float.
     d*: cdouble                ## * 64 bit IEEE-754 double.
-    f64*: cdouble              ## * Standard C, NULL terminated string.
-    s*: char ## * Standard C, NULL terminated, string. Used in systems which
-           ##  distinguish strings and symbols.
-    S*: char                   ## * Standard C, 8 bit, char.
-    c*: cuchar                 ## * A 4 byte MIDI packet.
-    m*: array[4, uint8_t]       ## * OSC TimeTag value.
-    t*: lo_timetag             ## * Blob *
-    blob*: INNER_C_STRUCT_2917098053
+    f64*: cdouble              ## * 64 bit IEEE-754 double.
+    s*: char                   ## * Standard C, NULL terminated string.
+    S*: char                   ## * Standard C, NULL terminated, string. Used in systems which distinguish strings and symbols.
+    c*: cuchar                 ## * Standard C, 8 bit, char.
+    m*: array[4, uint8_t]      ## * A 4 byte MIDI packet.
+    t*: lo_timetag             ## * OSC TimeTag value.
+    blob*: lo_arg_blob         ## * Blob *
 
 
 ##  Note: No struct literals in MSVC

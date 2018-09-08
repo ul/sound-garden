@@ -245,3 +245,9 @@ proc fsin*(phase: Signal): Signal =
     f: proc(ctx: Context): float = fsin(PI * phase.f(ctx)),
     label: "fsin(" && phase.label && ")"
   )
+
+proc round*(x: Signal): Signal =
+  Signal(
+    f: proc(ctx: Context): float = x.f(ctx).round(),
+    label: "round(" && x.label && ")"
+  )

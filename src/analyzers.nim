@@ -13,8 +13,8 @@ proc zeroCrossUp*(x: Signal): Signal =
 
 # NOTE cycles MUST be power of two!
 proc countZeroCrosses*(x: Signal, cycles: int = 16): Signal =
-  var counts: array[SOUNDIO_MAX_CHANNELS, float]
-  var cs: array[SOUNDIO_MAX_CHANNELS, int]
+  var counts: array[MAX_CHANNELS, float]
+  var cs: array[MAX_CHANNELS, int]
   let mask = cycles - 1
   let u = x.zeroCrossUp
   proc f(ctx: Context): float =
@@ -48,8 +48,8 @@ proc pitch*(x: Signal, cycles: int = 16): Signal =
 
 # NOTE cycles MUST be power of two!
 proc adaptivePitch*(x: Signal, cycles: int = 16): Signal =
-  var freqs: array[SOUNDIO_MAX_CHANNELS, Box[float]]
-  for i in 0..<SOUNDIO_MAX_CHANNELS:
+  var freqs: array[MAX_CHANNELS, Box[float]]
+  for i in 0..<MAX_CHANNELS:
     freqs[i] = box(10000.0)
   let freq = Signal(f: proc(ctx: Context): float = freqs[ctx.channel].get)
   let m = x.biQuadLPF(freq).zeroCrosses(cycles)

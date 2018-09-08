@@ -9,7 +9,7 @@ proc delaySamples*(x, delay: Signal, maxDelay: int): Signal =
   # NOTE +1 because interpolation looks for the next sample
   let maxDelay = (maxDelay + 1).nextPowerOfTwo
   let mask = maxDelay - 1
-  var buffer = newSeq[float](maxDelay * SOUNDIO_MAX_CHANNELS)
+  var buffer = newSeq[float](maxDelay * MAX_CHANNELS)
   proc f(ctx: Context): float =
     let channelOffset = maxDelay * ctx.channel
     let z = delay.f(ctx).splitDecimal
@@ -42,11 +42,11 @@ proc smoothestDelaySamples*(x, delay: Signal, crossfade, maxDelay: int): Signal 
   let maxDelay = (maxDelay + 1).nextPowerOfTwo
   let mask = maxDelay - 1
   let xfadeMask = crossfade - 1
-  var buffer = newSeq[float](maxDelay * SOUNDIO_MAX_CHANNELS)
-  var delayValues = newSeq[float](crossfade * SOUNDIO_MAX_CHANNELS)
+  var buffer = newSeq[float](maxDelay * MAX_CHANNELS)
+  var delayValues = newSeq[float](crossfade * MAX_CHANNELS)
   # this is start sample for current delay value and end sample for previous ones
-  var delayMarks = newSeq[int](crossfade * SOUNDIO_MAX_CHANNELS)
-  var cursors = newSeq[int](crossfade * SOUNDIO_MAX_CHANNELS)
+  var delayMarks = newSeq[int](crossfade * MAX_CHANNELS)
+  var cursors = newSeq[int](crossfade * MAX_CHANNELS)
   let pdelay = delay.prime
   proc ff(ctx: Context, delay: float): float =
     let channelOffset = maxDelay * ctx.channel

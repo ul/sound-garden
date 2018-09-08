@@ -13,7 +13,7 @@ proc lpf*(x, freq: Signal): Signal =
   result.f = (y + α * (x - y)).f
   result.label = "lpf(" && x.label && ", " && freq.label && ")"
 
-proc hpf*(previous, x, freq: Signal): Signal =
+proc hpf*(x, freq: Signal): Signal =
   result = Signal()
   let y = result.mult
   let k = freq * signal.sampleAngularPeriod

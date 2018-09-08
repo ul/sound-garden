@@ -5,7 +5,7 @@ import soundio
 import std
 
 proc metro*(freq: Signal): Signal =
-  var lastTrigger: array[SOUNDIO_MAX_CHANNELS, int]
+  var lastTrigger: array[MAX_CHANNELS, int]
   proc f(ctx: Context): float =
     let i = ctx.channel
     let delta = (ctx.sampleRate.toFloat / freq.f(ctx)).toInt
@@ -15,7 +15,7 @@ proc metro*(freq: Signal): Signal =
   Signal(f: f, label: "metro(" && freq.label && ")").mult
 
 proc dmetro*(dt: Signal): Signal =
-  var lastTrigger: array[SOUNDIO_MAX_CHANNELS, int]
+  var lastTrigger: array[MAX_CHANNELS, int]
   proc f(ctx: Context): float =
     let i = ctx.channel
     let delta = (ctx.sampleRate.toFloat * dt.f(ctx)).toInt

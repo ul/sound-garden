@@ -3,6 +3,9 @@ import math
 import soundio
 import std
 
+# const MAX_CHANNELS* = SOUNDIO_MAX_CHANNELS
+const MAX_CHANNELS* = 2
+
 type
   Signal* = ref object
     f*: proc(ctx: Context): float
@@ -57,8 +60,8 @@ proc channel*(x: Signal, i: int = 0): Signal =
   Signal(f: f, label: "channel " & $i & " of " && x.label)
 
 proc mult*(x: Signal): Signal =
-  var samples: array[SOUNDIO_MAX_CHANNELS, float]
-  var sampleNumbers: array[SOUNDIO_MAX_CHANNELS, int]
+  var samples: array[MAX_CHANNELS, float]
+  var sampleNumbers: array[MAX_CHANNELS, int]
   proc f(ctx: Context): float =
     let i = ctx.channel
     if ctx.sampleNumber > sampleNumbers[i]:
@@ -68,7 +71,7 @@ proc mult*(x: Signal): Signal =
   Signal(f: f, label: x.label)
 
 proc prime*(x: Signal): Signal =
-  var samples: array[SOUNDIO_MAX_CHANNELS, float]
+  var samples: array[MAX_CHANNELS, float]
   proc f(ctx: Context): float =
     let i = ctx.channel
     result = samples[i]

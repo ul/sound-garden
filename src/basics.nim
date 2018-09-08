@@ -37,3 +37,7 @@ proc amp2db*(x: float): float = 10.pow(x / 20.0)
 
 proc freq2midi*(x: float): float = 69.0 + 12.0 * log2(x / 440.0)
 proc midi2freq*(x: float): float = 440.0 * 2.pow((x - 69.0) / 12.0)
+
+proc quantize*(x: Signal, step: Signal): Signal =
+  result = (x / step).round * step
+

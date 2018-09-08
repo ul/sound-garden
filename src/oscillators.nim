@@ -6,7 +6,7 @@ import soundio
 import std
 
 proc saw*(freq: Signal, phase0: Signal = 0): Signal =
-  var phases: array[SOUNDIO_MAX_CHANNELS, float]
+  var phases: array[MAX_CHANNELS, float]
   proc f(ctx: Context): float =
     let i = ctx.channel
     phases[i] = (phases[i] + 2.0 * freq.f(ctx) / ctx.sampleRate.toFloat).mod(2.0)

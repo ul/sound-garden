@@ -205,6 +205,7 @@ proc execute*(s: var seq[Signal], cmd: string) =
   of "hsine": s &= s.word(hsine, "hsine")
   of "htangent": s &= s.word(htangent, "htangent")
   of "impulse": s &= s.word(impulse, "impulse")
+  of "input", "in", "mic": s &= input
   of "l": s &= s.word(biQuadLPF, "bqlpf", 0.7071)
   of "lpf": s &= s.word(lpf, "lpf")
   of "max": s &= s.word(max, "max")

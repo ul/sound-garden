@@ -17,7 +17,7 @@ if rss.kind == Err:
 let ss = rss.value
 
 const MAX_STREAMS = 8
-var streams: array[MAX_STREAMS, OutStream]
+var streams: array[MAX_STREAMS, IOStream]
 var stacks: array[MAX_STREAMS, seq[Signal]]
 var currentStack = 0
 var storage = newTable[string, Signal]()
@@ -29,18 +29,17 @@ for k in 'a'..'z':
   osc[$k] = box(0.0)
 
 for i in 0..<MAX_STREAMS:
-  let ros = ss.newOutStream
+  let ros = ss.newIOStream
   if ros.kind == Err:
     quit ros.msg
   let dac = ros.value
   streams[i] = dac
   stacks[i] = @[]
-  # TODO ensure that format is float32ne or support conversion
   if i == 0:
-    echo "Format:\t\t", dac.stream.format
-    echo "Sample Rate:\t", dac.stream.sampleRate
-    echo "Channels:\t", dac.stream.layout.channelCount
-    echo "Latency:\t", (1000.0 * dac.stream.softwareLatency).round(1), " ms"
+    echo "Sample Rate:\t", dac.outStream.sampleRate
+    echo "Channels:\t", dac.outStream.layout.channelCount
+    echo "Input Latency:\t", (1000.0 * dac.inStream.softwareLatency).round(1), " ms"
+    echo "Output Latency:\t", (1000.0 * dac.outStream.softwareLatency).round(1), " ms"
 
 proc interpret(line: string) =
   for cmd in line.splitWhitespace:

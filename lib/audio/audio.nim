@@ -1,35 +1,38 @@
+import math
 import std
 import soundio
 import context
 import signal
 
-GC_setMaxPause 300 # microseconds
-
 const MONITOR_MAX_DUR = 1 # second
+const SAMPLE_RATES = [48000, 44100, 96000, 24000]
+const SAMPLE_FORMAT = SoundIoFormatFloat32NE
 
 type
   SoundSystem* = object
     sio*: ptr SoundIo
-    device*: ptr SoundIoDevice
-  OutStream* = object
-    stream*: ptr SoundIoOutStream
+    inDevice*: ptr SoundIoDevice
+    outDevice*: ptr SoundIoDevice
+  IOStream* = object
+    inStream*: ptr SoundIoInStream
+    outStream*: ptr SoundIoOutStream
     userdata: ptr UserData
   UserData = object
     context: Context
     signal: Signal
     monitor: ptr SoundIoRingBuffer
+    input: ptr SoundIoRingBuffer
 
 let sizeOfChannelArea = sizeof SoundIoChannelArea
 let sizeOfSample = sizeof float
 
 proc writeCallback(outStream: ptr SoundIoOutStream, frameCountMin: cint, frameCountMax: cint) {.cdecl.} =
-  GC_disable()
-
   let userdata = cast[ptr UserData](outStream.userdata)
   let monitor = userdata.monitor
+  let input = userdata.input
   let ctx = userdata.context
   let signal = userdata.signal.f
-  let channelCount = outstream.layout.channelCount
+  let channelCount = outStream.layout.channelCount
   var areas: ptr SoundIoChannelArea
   var framesLeft = frameCountMax
   var err: cint
@@ -44,22 +47,29 @@ proc writeCallback(outStream: ptr SoundIoOutStream, frameCountMin: cint, frameCo
       break
 
     let ptrAreas = cast[int](areas)
-    let ptrMonitor = cast[int](monitor.write_ptr)
+    let ptrMonitor = cast[int](monitor.writePtr)
+    let ptrInput = cast[int](input.readPtr)
 
     for frame in 0..<frameCount:
+      let offset = frame * channelCount
       for channel in 0..<channelCount:
         ctx.channel = channel
+        ctx.input = cast[ptr float](ptrInput + (offset + channel) * sizeOfSample)[]
+
         let ptrArea = cast[ptr SoundIoChannelArea](ptrAreas + channel*sizeOfChannelArea)
         var ptrSample = cast[ptr float32](cast[int](ptrArea.pointer) + frame*ptrArea.step)
         let sample = signal(ctx)
         ptrSample[] = sample.float32
-        var ptrMonitorSample = cast[ptr float](ptrMonitor + frame * channelCount * sizeOfSample)
+
+        var ptrMonitorSample = cast[ptr float](ptrMonitor + (offset + channel) * sizeOfSample)
         ptrMonitorSample[] = sample
       ctx.sampleNumber += 1
 
-    monitor.advance_write_ptr(cint(frameCount * channelCount * sizeOfSample))
+    let bytesProcessed = cint(frameCount * channelCount * sizeOfSample)
+    monitor.advanceWritePtr(bytesProcessed)
+    input.advanceReadPtr(bytesProcessed)
 
-    err = outstream.endWrite
+    err = outStream.endWrite
     if err > 0 and err != cint(SoundIoError.Underflow):
       quit "Unrecoverable stream error: " & $err.strerror
 
@@ -67,13 +77,64 @@ proc writeCallback(outStream: ptr SoundIoOutStream, frameCountMin: cint, frameCo
     if framesLeft <= 0:
       break
 
-  GC_enable()
+proc readCallback(inStream: ptr SoundIoInStream, frameCountMin: cint, frameCountMax: cint) {.cdecl.} =
+  let channelCount = inStream.layout.channelCount
+  let userdata = cast[ptr UserData](inStream.userdata)
+  let buffer = userdata.input
+  let writePtr = cast[int](buffer.writePtr)
+  let freeBytes = buffer.freeCount
+  let freeCount = freeBytes div (channelCount * sizeOfSample)
+
+  # if frameCountMin > freeCount:
+  #   quit "Input ring buffer overflow"
+
+  let writeFrames = min(freeCount, frameCountMax)
+  var framesLeft: cint = cast[cint](writeFrames)
+  var areas: ptr SoundIoChannelArea
+  var err: cint
+
+  while true:
+    var frameCount = framesLeft
+
+    err = inStream.beginRead(areas.addr, frameCount.addr)
+    if err > 0:
+      quit "Unrecoverable stream error: " & $err.strerror
+    if frameCount <= 0:
+      break
+
+    if areas.isNil:
+      # Due to an overflow there is a hole. Fill the ring buffer with silence for the size of the hole.
+      for frame in 0..<frameCount:
+        let offset = frame * channelCount
+        for channel in 0..<channelCount:
+          var ptrBufferSample = cast[ptr float](writePtr + (offset + channel) * sizeOfSample)
+          ptrBufferSample[] = 0.0
+    else:
+      let ptrAreas = cast[int](areas)
+      for frame in 0..<frameCount:  
+        let offset = frame * channelCount
+        for channel in 0..<channelCount:
+          let ptrArea = cast[ptr SoundIoChannelArea](ptrAreas + channel*sizeOfChannelArea)
+          var ptrSample = cast[ptr float32](cast[int](ptrArea.pointer) + frame*ptrArea.step)
+          let sample: float = ptrSample[]
+          var ptrBufferSample = cast[ptr float](writePtr + (offset + channel) * sizeOfSample)
+          ptrBufferSample[] = sample
+
+    buffer.advanceWritePtr(cint(frameCount * channelCount * sizeOfSample))
+
+    err = inStream.endRead
+    if err > 0:
+      quit "Unrecoverable stream error: " & $err.strerror
+
+    framesLeft -= frameCount
+    if framesLeft <= 0:
+      break
 
 proc sserr(msg: string): Result[SoundSystem] =
   return Result[SoundSystem](kind: Err, msg: msg)
 
-proc oserr(msg: string): Result[OutStream] =
-  return Result[OutStream](kind: Err, msg: msg)
+proc ioserr(msg: string): Result[IOStream] =
+  return Result[IOStream](kind: Err, msg: msg)
 
 proc newSoundSystem*(): Result[SoundSystem] =
   let sio = soundioCreate()
@@ -87,72 +148,129 @@ proc newSoundSystem*(): Result[SoundSystem] =
   echo "Backend: \t", sio.currentBackend.name
   sio.flushEvents
 
-  let devID = sio.defaultOutputDeviceIndex
-  if devID < 0:
-    return sserr "Output device is not found"
-  let device = sio.getOutputDevice(devID)
-  if device.isNil:
+  let inDevId = sio.defaultInputDeviceIndex
+  if inDevId < 0:
+    return sserr "Input device is not found"
+  let inDevice = sio.getInputDevice(inDevId)
+  if inDevice.isNil:
     return sserr "out of mem"
-  if device.probeError > 0:
+  if inDevice.probeError > 0:
     return sserr "Cannot probe device"
 
-  echo "Output device:\t", device.name
+  echo "Input device:\t", inDevice.name
+
+  let outDevId = sio.defaultOutputDeviceIndex
+  if outDevId < 0:
+    return sserr "Output device is not found"
+  let outDevice = sio.getOutputDevice(outDevId)
+  if outDevice.isNil:
+    return sserr "out of mem"
+  if outDevice.probeError > 0:
+    return sserr "Cannot probe device"
+
+  echo "Output device:\t", outDevice.name
 
   return Result[SoundSystem](
     kind: Ok,
-    value: SoundSystem(sio: sio, device: device))
+    value: SoundSystem(sio: sio, inDevice: inDevice, outDevice: outDevice))
 
-proc newOutStream*(ss: SoundSystem): Result[OutStream] =
-  let stream = ss.device.outStreamCreate
-  stream.write_callback = writeCallback
+proc newIOStream*(ss: SoundSystem): Result[IOStream] =
+  ss.outDevice.sortChannelLayouts
+  let layout = bestMatchingChannelLayout(
+    ss.outDevice.layouts, ss.outDevice.layoutCount,
+    ss.inDevice.layouts, ss.inDevice.layoutCount,
+  )
+  if layout.isNil:
+    return ioserr "Channel layouts not compatible"
 
-  var err = stream.open
+  var sampleRate: cint
+  for sr in SAMPLE_RATES:
+    let csr = cast[cint](sr)
+    if ss.inDevice.supportsSampleRate(csr) and ss.outDevice.supportsSampleRate(csr):
+      sampleRate = csr
+      break
+
+  if sampleRate == 0:
+    return ioserr "Incompatible sound rates"
+
+  let inStream = ss.inDevice.inStreamCreate
+  inStream.format = SAMPLE_FORMAT
+  inStream.sampleRate = sampleRate
+  inStream.layout = layout[]
+  inStream.readCallback = readCallback
+
+  var err = inStream.open
   if err > 0:
-    return oserr "Unable to open device: " & $err.strerror
+    return ioserr "Unable to open input device: " & $err.strerror
 
-  if stream.layoutError > 0:
-    return oserr "Unable to set channel layout: " & $stream.layoutError.strerror
+  if inStream.layoutError > 0:
+    return ioserr "Unable to set input channel layout: " & $inStream.layoutError.strerror
 
-  err = stream.start
+  let outStream = ss.outDevice.outStreamCreate
+  outStream.format = SAMPLE_FORMAT
+  outStream.sampleRate = sampleRate
+  outStream.layout = layout[]
+  outStream.writeCallback = writeCallback
+
+  err = outStream.open
   if err > 0:
-    return oserr "Unable to start stream: " & $err.strerror
+    return ioserr "Unable to open output device: " & $err.strerror
 
-  stream.userdata = UserData.sizeof.alloc
+  if outStream.layoutError > 0:
+    return ioserr "Unable to set output channel layout: " & $outStream.layoutError.strerror
 
-  var ctx = Context(channel: 0, sampleNumber: 0, sampleRate: stream.sampleRate)
+  let ptrUserdata = UserData.sizeof.alloc
+  inStream.userdata = ptrUserdata
+  outStream.userdata = ptrUserdata
+
+  var ctx = Context(channel: 0, sampleNumber: 0, sampleRate: sampleRate)
   var silence = 0.toSignal
 
   GC_ref ctx
   GC_ref silence
 
-  var userdata = cast[ptr UserData](stream.userdata)
+  var userdata = cast[ptr UserData](ptrUserdata)
   userdata.context = ctx
   userdata.signal = silence
-  userdata.monitor = ss.sio.ring_buffer_create(
-    stream.sampleRate * stream.layout.channelCount * MONITOR_MAX_DUR
-  )
+  userdata.monitor = ss.sio.ringBufferCreate(cast[cint](
+    MONITOR_MAX_DUR * sampleRate * layout.channelCount * sizeOfSample
+  ))
+  userdata.input = ss.sio.ringBufferCreate(cast[cint]((
+    inStream.softwareLatency * (2 * sampleRate * layout.channelCount * sizeOfSample).toFloat
+  ).toInt))
 
-  return Result[OutStream](kind: Ok, value: OutStream(stream: stream, userdata: userdata))
+  err = inStream.start
+  if err > 0:
+    return ioserr "Unable to start input stream: " & $err.strerror
+
+  err = outStream.start
+  if err > 0:
+    return ioserr "Unable to start output stream: " & $err.strerror
+
+  return Result[IOStream](kind: Ok, value: IOStream(inStream: inStream, outStream: outStream, userdata: userdata))
 
 proc `=destroy`(s: var SoundSystem) =
-  s.device.unref
+  s.inDevice.unref
+  s.outDevice.unref
   s.sio.destroy
 
-proc `=destroy`(s: var OutStream) =
-  s.stream.destroy
+proc `=destroy`(s: var IOStream) =
+  s.inStream.destroy
+  s.outStream.destroy
   GC_unref s.userdata.signal
   GC_unref s.userdata.context
   s.userdata.monitor.destroy
+  s.userdata.input.destroy
   s.userdata.dealloc
 
-proc `signal=`*(stream: OutStream, s: Signal) =
+proc `signal=`*(stream: IOStream, s: Signal) =
   GC_unref stream.userdata.signal
   stream.userdata.signal = s
   GC_ref stream.userdata.signal
 
-proc signal*(stream: OutStream): Signal = stream.userdata.signal
+proc signal*(stream: IOStream): Signal = stream.userdata.signal
 
-proc context*(stream: OutStream): Context =
+proc context*(stream: IOStream): Context =
   result.deepCopy(stream.userdata.context)
 
-proc monitor*(stream: OutStream): ptr SoundIoRingBuffer = stream.userdata.monitor
+proc monitor*(stream: IOStream): ptr SoundIoRingBuffer = stream.userdata.monitor

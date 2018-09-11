@@ -6,9 +6,10 @@ import soundio
 import std
 import strutils
 
-proc wave*(stream: OutStream, step: int = 1) =
+# TODO support multiple channels
+proc wave*(stream: IOStream, step: int = 1) =
   let monitor = stream.monitor
-  let channelCount = stream.stream.layout.channelCount
+  let channelCount = stream.outStream.layout.channelCount
 
   let width = "tput cols".execProcess.strip.parseInt
   let height = 8

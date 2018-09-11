@@ -5,6 +5,7 @@ type
     channel*: int
     sampleNumber*: int
     sampleRate*: int
+    input*: float
 
 const TWOPI* = 2.0 * PI
 

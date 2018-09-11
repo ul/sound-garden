@@ -3,7 +3,7 @@ run: build
 
 build:
     mkdir -p target
-    nim c -d:release --opt:speed -d:useRealtimeGC -o:target/sound-garden src/main.nim
+    nim c -d:release --opt:speed -o:target/sound-garden src/main.nim
 
 watch:
     watchexec -e nim -- just build

@@ -1,7 +1,6 @@
 import audio/[context, signal]
 import math
 import maths
-import soundio
 import std
 
 proc metro*(freq: Signal): Signal =

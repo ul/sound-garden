@@ -5,6 +5,7 @@ import delays
 import envelopes
 import filters
 import maths
+import modulation
 import oscillators
 import spats
 import strutils
@@ -98,6 +99,27 @@ proc word(s: var seq[Signal], f: proc(a, b: Signal; c, d: int): Signal, label: s
   let a = s.pop
   result = f(a, b, x, y)
   result.label = a.label & " " & b.label & " " & label
+
+proc word(s: var seq[Signal], f: proc(a, b, c, d: Signal): Signal, label: string): Signal =
+  if s.len < 4:
+    echo "Stack is too short"
+    return
+  let d = s.pop
+  let c = s.pop
+  let b = s.pop
+  let a = s.pop
+  result = f(a, b, c, d)
+  result.label = a.label & " " & b.label & " " & c.label & " " & d.label & label
+
+proc word(s: var seq[Signal], f: proc(a, b, c, _: Signal): Signal, label: string, d: Signal): Signal =
+  if s.len < 3:
+    echo "Stack is too short"
+    return
+  let c = s.pop
+  let b = s.pop
+  let a = s.pop
+  result = f(a, b, c, d)
+  result.label = a.label & " " & b.label & " " & c.label & " " & d.label & label
 
 proc word(s: var seq[Signal], f: proc(a, b, c, d, e: Signal): Signal, label: string): Signal =
   if s.len < 5:
@@ -209,6 +231,7 @@ proc execute*(s: var seq[Signal], cmd: string) =
   of "div": s &= s.word(`div`, "div")
   of "exp": s &= s.word(exp, "exp")
   of "fb": s &= s.word(feedback, "fb")
+  of "fm": s &= s.word(fm, "fm", 0)
   of "sfb": s &= s.word(smoothFeedback, "sfb")
   of "ssfb": s &= s.word(smoothestFeedback, "ssfb")
   of "h": s &= s.word(biQuadHPF, "bqhpf", 0.7071)
@@ -229,6 +252,7 @@ proc execute*(s: var seq[Signal], cmd: string) =
   of "p": s &= s.word(pulse, "pulse", 0)
   of "pan": s &= s.word(pan, "pan")
   of "pitch": s &= s.word(yin.pitch, "pitch", 1024, 0.2)
+  of "pm": s &= s.word(pm, "pm", 0)
   of "prime": s &= s.word(prime, "prime")
   of "project": s &= s.word(project, "project")
   of "pulse": s &= s.word(pulse, "pulse")

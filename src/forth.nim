@@ -9,6 +9,7 @@ import oscillators
 import spats
 import strutils
 import triggers
+import yin
 
 const stackMarkers = ["⓪", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨"]
 
@@ -70,6 +71,14 @@ proc word(s: var seq[Signal], f: proc(x, a, b: Signal): Signal, label: string, y
   let x = s.pop
   result = f(x, y, z)
   result.label = x.label & " " & y.label & " " & z.label & " "  & label
+
+proc word(s: var seq[Signal], f: proc(x: Signal, a: int, b: float): Signal, label: string, y: int, z: float): Signal =
+  if s.len < 1:
+    echo "Stack is too short"
+    return
+  let x = s.pop
+  result = f(x, y, z)
+  result.label = x.label & " " & label
 
 proc word(s: var seq[Signal], f: proc(x, y, z: Signal): Signal, label: string): Signal =
   if s.len < 3:
@@ -183,6 +192,8 @@ proc execute*(s: var seq[Signal], cmd: string) =
   of ">": s &= s.word(greater, ">")
   of ">=": s &= s.word(greaterEqual, ">=")
   of "add": s &= s.word(add, "add")
+  of "and": s &= s.word(`and`, "and")
+  of "or": s &= s.word(`or`, "or")
   of "bqhpf": s &= s.word(biQuadHPF, "bqhpf")
   of "bqlpf": s &= s.word(biQuadLPF, "bqlpf")
   of "circle", "angular": s &= s.word(circle, "circle")
@@ -216,7 +227,7 @@ proc execute*(s: var seq[Signal], cmd: string) =
   of "mul": s &= s.word(mul, "mul")
   of "p": s &= s.word(pulse, "pulse", 0)
   of "pan": s &= s.word(pan, "pan")
-  of "pitch": s &= s.word(adaptivePitch, "pitch", 16)
+  of "pitch": s &= s.word(yin.pitch, "pitch", 1024, 0.2)
   of "prime": s &= s.word(prime, "prime")
   of "project": s &= s.word(project, "project")
   of "pulse": s &= s.word(pulse, "pulse")

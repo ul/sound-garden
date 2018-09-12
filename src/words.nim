@@ -191,6 +191,7 @@ proc execute*(s: var seq[Signal], cmd: string) =
   of "==": s &= s.word(equal, "==")
   of ">": s &= s.word(greater, ">")
   of ">=": s &= s.word(greaterEqual, ">=")
+  of "adsr": s &= s.word(adsr, "adsr")
   of "add": s &= s.word(add, "add")
   of "and": s &= s.word(`and`, "and")
   of "or": s &= s.word(`or`, "or")

@@ -42,7 +42,7 @@ proc writeCallback(outStream: ptr SoundIoOutStream, frameCountMin: cint, frameCo
 
     err = outStream.beginWrite(areas.addr, frameCount.addr)
     if err > 0:
-      quit "Unrecoverable stream error: " & $err.strerror
+      quit "Unrecoverable out stream begin error: " & $err.strerror
     if frameCount <= 0:
       break
 
@@ -71,7 +71,7 @@ proc writeCallback(outStream: ptr SoundIoOutStream, frameCountMin: cint, frameCo
 
     err = outStream.endWrite
     if err > 0 and err != cint(SoundIoError.Underflow):
-      quit "Unrecoverable stream error: " & $err.strerror
+      quit "Unrecoverable out stream end error: " & $err.strerror
 
     framesLeft -= frameCount
     if framesLeft <= 0:
@@ -83,10 +83,7 @@ proc readCallback(inStream: ptr SoundIoInStream, frameCountMin: cint, frameCount
   let buffer = userdata.input
   let writePtr = cast[int](buffer.writePtr)
   let freeBytes = buffer.freeCount
-  let freeCount = freeBytes div (channelCount * sizeOfSample)
-
-  # if frameCountMin > freeCount:
-  #   quit "Input ring buffer overflow"
+  let freeCount = max(frameCountMin, freeBytes div (channelCount * sizeOfSample))
 
   let writeFrames = min(freeCount, frameCountMax)
   var framesLeft: cint = cast[cint](writeFrames)
@@ -98,7 +95,7 @@ proc readCallback(inStream: ptr SoundIoInStream, frameCountMin: cint, frameCount
 
     err = inStream.beginRead(areas.addr, frameCount.addr)
     if err > 0:
-      quit "Unrecoverable stream error: " & $err.strerror
+      quit "Unrecoverable in stream begin error: " & $err.strerror
     if frameCount <= 0:
       break
 
@@ -124,7 +121,7 @@ proc readCallback(inStream: ptr SoundIoInStream, frameCountMin: cint, frameCount
 
     err = inStream.endRead
     if err > 0:
-      quit "Unrecoverable stream error: " & $err.strerror
+      quit "Unrecoverable in stream end error: " & $err.strerror
 
     framesLeft -= frameCount
     if framesLeft <= 0:

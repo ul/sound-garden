@@ -2,6 +2,7 @@ import audio/[audio, context, signal]
 import environment
 import nimbox
 import strutils
+import tables
 import words
 
 type
@@ -24,6 +25,7 @@ type
     offset: Point
     state: State
     nodes: seq[Node]
+    outputs: TableRef[int, Signal]
     activeNode: Node
 
 proc `+`(p1: Point, p2: Point): Point = (p1.x + p2.x, p1.y + p2.y)
@@ -46,10 +48,12 @@ proc clientPosition(app: App, node: Node): Point = (
 )
 
 proc getInput(app: App, i: int): Signal =
-  proc f(ctx: Context): float =
-    if i < app.nodes.len:
-      return app.nodes[i].signal.f(ctx)
-  Signal(f: f, label: $i)
+  if not app.outputs.hasKey(i):
+    proc f(ctx: Context): float =
+      if i < app.nodes.len:
+        return app.nodes[i].signal.f(ctx)
+    app.outputs[i] = Signal(f: f, label: $i).mult
+  return app.outputs[i]
 
 proc ioBarWidth(node: Node): int = node.inputsDraft.strip.len + 1 + ($node.id).len
 
@@ -159,7 +163,7 @@ proc run*(env: Environment) =
 
   nb.inputMode = InputMode.inpMouse
 
-  var app = App(nodes: @[])
+  var app = App(nodes: @[], outputs: newTable[int, Signal]())
 
   var evt: Event
 

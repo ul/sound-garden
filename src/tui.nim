@@ -68,16 +68,16 @@ proc alignBars(node: var Node) =
     node.inputsDraft = node.inputsDraft.strip & spaces(1 - delta)
     node.signalDraft = node.signalDraft.strip & spaces(1)
 
-proc commitInputs(node: var Node) =
+proc commitNode(app: App, node: var Node) =
   node.inputsDraft = node.inputsDraft.strip
+  node.signalDraft = node.signalDraft.strip
+
   node.inputs.setLen(0)
   for id in node.inputsDraft.splitWhitespace:
     node.inputs &= id.parseInt
+
   node.alignBars
 
-proc commitSignal(app: App, node: var Node) =
-  node.signalDraft = node.signalDraft.strip
-  node.alignBars
   var stack: seq[Signal] = @[]
   for i in node.inputs:
     stack &= app.getInput(i)
@@ -85,6 +85,8 @@ proc commitSignal(app: App, node: var Node) =
     stack.execute(c)
   if stack.len > 0:
     node.signal = stack.pop
+  else:
+    node.signal = 0
 
 proc draw(nb: Nimbox, app: App, node: Node) =
   let p = app.clientPosition(node)
@@ -204,7 +206,7 @@ proc run*(env: Environment) =
         let i = c.x - p.x - 1
         case evt.sym:
         of Symbol.Enter:
-          app.activeNode.commitInputs
+          app.commitNode(app.activeNode)
           app.state = Idle
           app.activeNode = nil
         of Symbol.Left:
@@ -231,7 +233,7 @@ proc run*(env: Environment) =
         let i = c.x - p.x - 1
         case evt.sym:
         of Symbol.Enter:
-          app.commitSignal(app.activeNode)
+          app.commitNode(app.activeNode)
           app.state = Idle
           app.activeNode = nil
         of Symbol.Left:
@@ -308,14 +310,14 @@ proc run*(env: Environment) =
       of EditInputs:
         case evt.action:
         of Left:
-          app.activeNode.commitInputs
+          app.commitNode(app.activeNode)
           app.state = Idle
           app.activeNode = nil
         else: discard
       of EditSignal:
         case evt.action:
         of Left:
-          app.commitSignal(app.activeNode)
+          app.commitNode(app.activeNode)
           app.state = Idle
           app.activeNode = nil
         else: discard

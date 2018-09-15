@@ -14,93 +14,103 @@ import yin
 
 const stackMarkers = ["⓪", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨"]
 
-proc word(s: var seq[Signal], f: proc(x: Signal): Signal, label: string): Signal =
+proc word(s: var seq[Signal], f: proc(x: Signal): Signal, label: string) =
   if s.len < 1:
     echo "Stack is too short"
     return
   let x = s.pop
-  result = f(x)
+  var result = f(x)
   result.label = x.label & " " & label
+  s &= result
 
-proc word(s: var seq[Signal], f: proc(x, _: Signal): Signal, label: string, y: Signal): Signal =
+proc word(s: var seq[Signal], f: proc(x, _: Signal): Signal, label: string, y: Signal) =
   if s.len < 1:
     echo "Stack is too short"
     return
   let x = s.pop
-  result = f(x, y)
+  var result = f(x, y)
   result.label = x.label & " " & y.label & " " & label
+  s &= result
 
-proc word(s: var seq[Signal], f: proc(x: Signal, _: int): Signal, label: string, y: int): Signal =
+proc word(s: var seq[Signal], f: proc(x: Signal, _: int): Signal, label: string, y: int) =
   if s.len < 1:
     echo "Stack is too short"
     return
   let x = s.pop
-  result = f(x, y)
+  var result = f(x, y)
   result.label = x.label & " " & label
+  s &= result
 
-proc word(s: var seq[Signal], f: proc(x, y: Signal): Signal, label: string): Signal =
+proc word(s: var seq[Signal], f: proc(x, y: Signal): Signal, label: string) =
   if s.len < 2:
     echo "Stack is too short"
     return
   let y = s.pop
   let x = s.pop
-  result = f(x, y)
+  var result = f(x, y)
   result.label = x.label & " " & y.label & " " & label
+  s &= result
 
-proc word(s: var seq[Signal], f: proc(x, y, _: Signal): Signal, label: string, z: Signal): Signal =
+proc word(s: var seq[Signal], f: proc(x, y, _: Signal): Signal, label: string, z: Signal) =
   if s.len < 2:
     echo "Stack is too short"
     return
   let y = s.pop
   let x = s.pop
-  result = f(x, y, z)
+  var result = f(x, y, z)
   result.label = x.label & " " & y.label & " " & z.label & " "  & label
+  s &= result
 
-proc word(s: var seq[Signal], f: proc(x, y: Signal, _: int): Signal, label: string, z: int): Signal =
+proc word(s: var seq[Signal], f: proc(x, y: Signal, _: int): Signal, label: string, z: int) =
   if s.len < 2:
     echo "Stack is too short"
     return
   let y = s.pop
   let x = s.pop
-  result = f(x, y, z)
+  var result = f(x, y, z)
   result.label = x.label & " " & y.label & " " & label
+  s &= result
 
-proc word(s: var seq[Signal], f: proc(x, a, b: Signal): Signal, label: string, y, z: Signal): Signal =
+proc word(s: var seq[Signal], f: proc(x, a, b: Signal): Signal, label: string, y, z: Signal) =
   if s.len < 1:
     echo "Stack is too short"
     return
   let x = s.pop
-  result = f(x, y, z)
+  var result = f(x, y, z)
   result.label = x.label & " " & y.label & " " & z.label & " "  & label
+  s &= result
 
-proc word(s: var seq[Signal], f: proc(x: Signal, a: int, b: float): Signal, label: string, y: int, z: float): Signal =
+proc word(s: var seq[Signal], f: proc(x: Signal, a: int, b: float): Signal, label: string, y: int, z: float) =
   if s.len < 1:
     echo "Stack is too short"
     return
   let x = s.pop
-  result = f(x, y, z)
+  var result = f(x, y, z)
   result.label = x.label & " " & label
+  s &= result
 
-proc word(s: var seq[Signal], f: proc(x, y, z: Signal): Signal, label: string): Signal =
+proc word(s: var seq[Signal], f: proc(x, y, z: Signal): Signal, label: string) =
   if s.len < 3:
     echo "Stack is too short"
     return
   let z = s.pop
   let y = s.pop
   let x = s.pop
-  result = f(x, y, z)
+  var result = f(x, y, z)
   result.label = x.label & " " & y.label & " " & z.label & " "  & label
+  s &= result
 
-proc word(s: var seq[Signal], f: proc(a, b: Signal; c, d: int): Signal, label: string, x, y: int): Signal =
+proc word(s: var seq[Signal], f: proc(a, b: Signal; c, d: int): Signal, label: string, x, y: int) =
   if s.len < 2:
     echo "Stack is too short"
     return
   let b = s.pop
   let a = s.pop
-  result = f(a, b, x, y)
+  var result = f(a, b, x, y)
   result.label = a.label & " " & b.label & " " & label
+  s &= result
 
-proc word(s: var seq[Signal], f: proc(a, b, c, d: Signal): Signal, label: string): Signal =
+proc word(s: var seq[Signal], f: proc(a, b, c, d: Signal): Signal, label: string) =
   if s.len < 4:
     echo "Stack is too short"
     return
@@ -108,20 +118,22 @@ proc word(s: var seq[Signal], f: proc(a, b, c, d: Signal): Signal, label: string
   let c = s.pop
   let b = s.pop
   let a = s.pop
-  result = f(a, b, c, d)
+  var result = f(a, b, c, d)
   result.label = a.label & " " & b.label & " " & c.label & " " & d.label & label
+  s &= result
 
-proc word(s: var seq[Signal], f: proc(a, b, c, _: Signal): Signal, label: string, d: Signal): Signal =
+proc word(s: var seq[Signal], f: proc(a, b, c, _: Signal): Signal, label: string, d: Signal) =
   if s.len < 3:
     echo "Stack is too short"
     return
   let c = s.pop
   let b = s.pop
   let a = s.pop
-  result = f(a, b, c, d)
+  var result = f(a, b, c, d)
   result.label = a.label & " " & b.label & " " & c.label & " " & d.label & label
+  s &= result
 
-proc word(s: var seq[Signal], f: proc(a, b, c, d, e: Signal): Signal, label: string): Signal =
+proc word(s: var seq[Signal], f: proc(a, b, c, d, e: Signal): Signal, label: string) =
   if s.len < 5:
     echo "Stack is too short"
     return
@@ -130,8 +142,9 @@ proc word(s: var seq[Signal], f: proc(a, b, c, d, e: Signal): Signal, label: str
   let c = s.pop
   let b = s.pop
   let a = s.pop
-  result = f(a, b, c, d, e)
+  var result = f(a, b, c, d, e)
   result.label = a.label & " " & b.label & " " & c.label & " " & d.label & " " & e.label & label
+  s &= result
 
 proc execute*(s: var seq[Signal], cmd: string) =
   case cmd
@@ -202,86 +215,86 @@ proc execute*(s: var seq[Signal], cmd: string) =
       s &= y
     else:
       echo "Stack is too short"
-  of "*": s &= s.word(mul, "*")
-  of "*.": s &= s.word(`*.`, "*")
-  of "+": s &= s.word(add, "+")
-  of "-": s &= s.word(sub, "-")
-  of ".*": s &= s.word(`.*`, "*")
-  of "/": s &= s.word(`div`, "/")
-  of "<": s &= s.word(less, "<")
-  of "<=": s &= s.word(lessEqual, "<=")
-  of "==": s &= s.word(equal, "==")
-  of ">": s &= s.word(greater, ">")
-  of ">=": s &= s.word(greaterEqual, ">=")
-  of "adsr": s &= s.word(adsr, "adsr")
-  of "add": s &= s.word(add, "add")
-  of "and": s &= s.word(`and`, "and")
-  of "or": s &= s.word(`or`, "or")
-  of "bqhpf": s &= s.word(biQuadHPF, "bqhpf")
-  of "bqlpf": s &= s.word(biQuadLPF, "bqlpf")
-  of "circle", "angular": s &= s.word(circle, "circle")
-  of "clausen": s &= s.word(clausen, "clausen", 100)
-  of "clip": s &= s.word(clip, "clip", -1.0, 1.0)
-  of "cos": s &= s.word(cos, "cos")
-  of "cosh": s &= s.word(cosh, "cosh")
-  of "cosine": s &= s.word(cosine, "cosine")
-  of "delay": s &= s.word(delay, "delay", 60*48000)
-  of "sdelay": s &= s.word(smoothDelay, "sdelay", 256, 60*48000)
-  of "ssdelay": s &= s.word(smoothestDelay, "ssdelay", 256, 60*48000)
-  of "div": s &= s.word(`div`, "div")
-  of "exp": s &= s.word(exp, "exp")
-  of "fb": s &= s.word(feedback, "fb")
-  of "fm": s &= s.word(fm, "fm", 0)
-  of "sfb": s &= s.word(smoothFeedback, "sfb")
-  of "ssfb": s &= s.word(smoothestFeedback, "ssfb")
-  of "h": s &= s.word(biQuadHPF, "bqhpf", 0.7071)
-  of "hcosine": s &= s.word(hcosine, "hcosine")
-  of "hpf": s &= s.word(hpf, "hpf")
-  of "hsine": s &= s.word(hsine, "hsine")
-  of "htangent": s &= s.word(htangent, "htangent")
-  of "impulse": s &= s.word(impulse, "impulse")
+  of "*": s.word(mul, "*")
+  of "*.": s.word(`*.`, "*")
+  of "+": s.word(add, "+")
+  of "-": s.word(sub, "-")
+  of ".*": s.word(`.*`, "*")
+  of "/": s.word(`div`, "/")
+  of "<": s.word(less, "<")
+  of "<=": s.word(lessEqual, "<=")
+  of "==": s.word(equal, "==")
+  of ">": s.word(greater, ">")
+  of ">=": s.word(greaterEqual, ">=")
+  of "adsr": s.word(adsr, "adsr")
+  of "add": s.word(add, "add")
+  of "and": s.word(`and`, "and")
+  of "or": s.word(`or`, "or")
+  of "bqhpf": s.word(biQuadHPF, "bqhpf")
+  of "bqlpf": s.word(biQuadLPF, "bqlpf")
+  of "circle", "angular": s.word(circle, "circle")
+  of "clausen": s.word(clausen, "clausen", 100)
+  of "clip": s.word(clip, "clip", -1.0, 1.0)
+  of "cos": s.word(cos, "cos")
+  of "cosh": s.word(cosh, "cosh")
+  of "cosine": s.word(cosine, "cosine")
+  of "delay": s.word(delay, "delay", 60*48000)
+  of "sdelay": s.word(smoothDelay, "sdelay", 256, 60*48000)
+  of "ssdelay": s.word(smoothestDelay, "ssdelay", 256, 60*48000)
+  of "div": s.word(`div`, "div")
+  of "exp": s.word(exp, "exp")
+  of "fb": s.word(feedback, "fb")
+  of "fm": s.word(fm, "fm", 0)
+  of "sfb": s.word(smoothFeedback, "sfb")
+  of "ssfb": s.word(smoothestFeedback, "ssfb")
+  of "h": s.word(biQuadHPF, "bqhpf", 0.7071)
+  of "hcosine": s.word(hcosine, "hcosine")
+  of "hpf": s.word(hpf, "hpf")
+  of "hsine": s.word(hsine, "hsine")
+  of "htangent": s.word(htangent, "htangent")
+  of "impulse": s.word(impulse, "impulse")
   of "input", "in", "mic": s &= input
-  of "l": s &= s.word(biQuadLPF, "bqlpf", 0.7071)
-  of "lpf": s &= s.word(lpf, "lpf")
-  of "max": s &= s.word(max, "max")
-  of "min": s &= s.word(min, "min")
-  of "metro", "m": s &= s.word(metro, "metro")
-  of "dmetro", "dm": s &= s.word(dmetro, "dmetro")
-  of "mod": s &= s.word(`mod`, "mod")
-  of "mul": s &= s.word(mul, "mul")
-  of "p": s &= s.word(pulse, "pulse", 0)
-  of "pan": s &= s.word(pan, "pan")
-  of "pitch": s &= s.word(yin.pitch, "pitch", 1024, 0.2)
-  of "pm": s &= s.word(pm, "pm", 0)
-  of "prime": s &= s.word(prime, "prime")
-  of "project": s &= s.word(project, "project")
-  of "pulse": s &= s.word(pulse, "pulse")
-  of "quantize": s &= s.word(quantize, "quantize")
-  of "range", "[]", "r": s &= s.word(basics.range, "range")
-  of "rectangle": s &= s.word(rectangle, "rectangle")
-  of "round": s &= s.word(round, "round")
-  of "s": s &= s.word(sine, "sine", 0)
-  of "saw": s &= s.word(saw, "saw")
-  of "sh": s &= s.word(sampleAndHold, "sh")
+  of "l": s.word(biQuadLPF, "bqlpf", 0.7071)
+  of "lpf": s.word(lpf, "lpf")
+  of "max": s.word(max, "max")
+  of "min": s.word(min, "min")
+  of "metro", "m": s.word(metro, "metro")
+  of "dmetro", "dm": s.word(dmetro, "dmetro")
+  of "mod": s.word(`mod`, "mod")
+  of "mul": s.word(mul, "mul")
+  of "p": s.word(pulse, "pulse", 0)
+  of "pan": s.word(pan, "pan")
+  of "pitch": s.word(yin.pitch, "pitch", 1024, 0.2)
+  of "pm": s.word(pm, "pm", 0)
+  of "prime": s.word(prime, "prime")
+  of "project": s.word(project, "project")
+  of "pulse": s.word(pulse, "pulse")
+  of "quantize": s.word(quantize, "quantize")
+  of "range", "[]", "r": s.word(basics.range, "range")
+  of "rectangle": s.word(rectangle, "rectangle")
+  of "round": s.word(round, "round")
+  of "s": s.word(sine, "sine", 0)
+  of "saw": s.word(saw, "saw")
+  of "sh": s.word(sampleAndHold, "sh")
   of "silence": s &= silence
-  of "sin": s &= s.word(sin, "sin")
-  of "sine": s &= s.word(sine, "sine")
-  of "sinh": s &= s.word(sinh, "sinh")
-  of "sub": s &= s.word(sub, "sub")
-  of "t": s &= s.word(tri, "tri", 0)
-  of "tan": s &= s.word(tan, "tan")
-  of "tangent": s &= s.word(tangent, "tangent")
-  of "tanh": s &= s.word(tanh, "tanh")
-  of "tri": s &= s.word(tri, "tri")
-  of "triangle": s &= s.word(triangle, "triangle")
-  of "unit": s &= s.word(unit, "unit")
-  of "w": s &= s.word(saw, "saw", 0)
+  of "sin": s.word(sin, "sin")
+  of "sine": s.word(sine, "sine")
+  of "sinh": s.word(sinh, "sinh")
+  of "sub": s.word(sub, "sub")
+  of "t": s.word(tri, "tri", 0)
+  of "tan": s.word(tan, "tan")
+  of "tangent": s.word(tangent, "tangent")
+  of "tanh": s.word(tanh, "tanh")
+  of "tri": s.word(tri, "tri")
+  of "triangle": s.word(triangle, "triangle")
+  of "unit": s.word(unit, "unit")
+  of "w": s.word(saw, "saw", 0)
   of "whiteNoise", "noise", "n": s &= whiteNoise
-  of "wrap": s &= s.word(wrap, "wrap", -1.0, 1.0)
-  of "db2amp", "db2a": s &= s.word(db2amp.toSignal, "db2amp")
-  of "amp2db", "a2db": s &= s.word(amp2db.toSignal, "amp2db")
-  of "freq2midi", "f2m": s &= s.word(freq2midi.toSignal, "freq2midi")
-  of "midi2freq", "m2f": s &= s.word(midi2freq.toSignal, "midi2freq")
+  of "wrap": s.word(wrap, "wrap", -1.0, 1.0)
+  of "db2amp", "db2a": s.word(db2amp.toSignal, "db2amp")
+  of "amp2db", "a2db": s.word(amp2db.toSignal, "amp2db")
+  of "freq2midi", "f2m": s.word(freq2midi.toSignal, "freq2midi")
+  of "midi2freq", "m2f": s.word(midi2freq.toSignal, "midi2freq")
   else:
     try:
       s &= cmd.parseFloat.toSignal

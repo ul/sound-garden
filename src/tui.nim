@@ -105,10 +105,11 @@ proc draw(nb: Nimbox, app: App, node: Node) =
       nb.print(x + i, y + j, "|")
   for i in 0..<node.inputsDraft.len:
     nb.print(x + 1 + i, y + 1, $node.inputsDraft[i])
-  nb.print(x + 1 + node.inputsDraft.len, y + 1, "|")
+  nb.print(x + 1 + node.inputsDraft.len, y + 1, ">")
   let id = $node.id
   for i in 0..<id.len:
     nb.print(x + width - 1 - id.len + i, y + 1, $id[i])
+  nb.print(x + width - 1, y + 1, ">")
   for i in 0..<node.signalDraft.len:
     nb.print(x + 1 + i, y + 3, $node.signalDraft[i])
 
@@ -128,22 +129,24 @@ proc draw(nb: Nimbox, app: App, node: Node) =
       let dx2 = dx div 2
       let dx3 = dx - dx2
       for i in 0..<dx2:
-        nb.print(iright + 1 + i, ip.y + 2, "-")
+        nb.print(iright + 1 + i, ip.y + 1, "-")
       for i in 0..<dx3:
         nb.print(x - 1 - i, y + 2, "-")
-      nb.print(iright + 1 + dx2, ip.y + 2, "+")
+      nb.print(iright + 1 + dx2, ip.y + 1, "+")
       nb.print(x - dx3, y + 2, "+")
-      let minY = min(y, ip.y)
-      let maxY = max(y, ip.y)
-      for y in (minY + 3)..(maxY + 1):
-        nb.print(iright + 1 + dx2, y, "|")
+      if ip.y + 1 < y + 2:
+        for y in (ip.y + 2)..(y + 1):
+          nb.print(iright + 1 + dx2, y, "|")
+      else:
+        for y in (y + 3)..(ip.y):
+          nb.print(iright + 1 + dx2, y, "|")
     elif iright == x:
       let minY = min(y, ip.y)
       let maxY = max(y, ip.y)
       for y in (minY + 5)..(maxY - 1):
         nb.print(x, y, "|")
     else:
-        nb.print(iright + 1, ip.y + 2, "-@")
+        nb.print(iright + 1, ip.y + 1, "-@")
         nb.print(x - 2, y + 2, "@-")
 
 proc inside(app: App, node: Node, p: Point): bool =

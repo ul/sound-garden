@@ -83,6 +83,9 @@ proc readCallback(inStream: ptr SoundIoInStream, frameCountMin: cint, frameCount
   let buffer = userdata.input
   let writePtr = cast[int](buffer.writePtr)
   let freeBytes = buffer.freeCount
+  # NOTE max(frameCountMin, ...) masks ring buffer overflows
+  # which may lead to unexpected shifts while reading,
+  # we might want to reconsider this behaviour
   let freeCount = max(frameCountMin, freeBytes div (channelCount * sizeOfSample))
 
   let writeFrames = min(freeCount, frameCountMax)
@@ -233,7 +236,7 @@ proc newIOStream*(ss: SoundSystem): Result[IOStream] =
     MONITOR_MAX_DUR * sampleRate * layout.channelCount * sizeOfSample
   ))
   userdata.input = ss.sio.ringBufferCreate(cast[cint]((
-    inStream.softwareLatency * (2 * sampleRate * layout.channelCount * sizeOfSample).toFloat
+    inStream.softwareLatency * (4 * sampleRate * layout.channelCount * sizeOfSample).toFloat
   ).toInt))
 
   err = inStream.start

@@ -11,3 +11,6 @@ watch:
 pack: build
     strip target/sound-garden
     7z a target/sg.7z target/sound-garden
+
+tui: build
+    target/sound-garden tui

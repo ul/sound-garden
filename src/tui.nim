@@ -171,6 +171,27 @@ proc inside(app: App, node: Node, p: Point): bool =
   let c = app.clientPosition(node)
   return p.x >= c.x and p.x < c.x + node.width and p.y >= c.y and p.y < c.y + node.height
 
+proc serialize(app: App): string =
+  result = ""
+  for node in app.nodes:
+    result &= "$#|$#|$#,$#\n" % [node.inputsDraft, node.signalDraft, $node.position.x, $node.position.y]
+
+proc deserialize(s: string): App =
+  result = App(nodes: @[], outputs: newTable[int, Signal]())
+  for line in s.splitLines:
+    let draft = line.split("|")
+    if draft.len < 3:
+      continue
+    let position = draft[2].split(",")
+    var node = Node(
+      id: result.nodes.len,
+      inputsDraft: draft[0],
+      signalDraft: draft[1],
+      position: (position[0].parseInt, position[1].parseInt)
+    )
+    node.alignBars
+    result.nodes &= node
+
 proc run*(env: Environment) =
   var nb = newNimbox()
   defer: nb.shutdown()
@@ -264,6 +285,13 @@ proc run*(env: Environment) =
         of Symbol.Character, Symbol.Space:
           node.signalDraft.insert($evt.ch, i)
           app.cursor.x += 1
+        else: discard
+      of Idle:
+        case evt.ch
+        of '/':
+          "dump.txt".writeFile(app.serialize)
+        of '\\':
+          app = "dump.txt".readFile.deserialize
         else: discard
       else: discard
     of EventType.Mouse:

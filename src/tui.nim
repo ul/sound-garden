@@ -322,7 +322,7 @@ proc run*(env: Environment) =
         case evt.action:
         of Left:
           for node in app.nodes:
-            if app.inside(node, app.cursor):
+            if app.inside(node, p):
               app.state = Drag
               app.activeNode = node
               break
@@ -330,7 +330,7 @@ proc run*(env: Environment) =
             app.state = Pan
         of Right:
           for node in app.nodes:
-            if app.inside(node, app.cursor):
+            if app.inside(node, p):
               let c = app.clientPosition(node)
               if p.y == c.y + 1 and p.x > c.x and p.x <= c.x + node.inputsDraft.len:
                 app.state = EditInputs

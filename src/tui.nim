@@ -67,6 +67,9 @@ proc alignBars(node: var Node) =
   elif delta < 0:
     node.inputsDraft = node.inputsDraft.strip & spaces(1 - delta)
     node.signalDraft = node.signalDraft.strip & spaces(1)
+  else:
+    node.inputsDraft = node.inputsDraft.strip & spaces(1)
+    node.signalDraft = node.signalDraft.strip & spaces(1)
 
 proc commitNode(app: App, node: var Node) =
   node.inputsDraft = node.inputsDraft.strip

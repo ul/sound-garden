@@ -179,7 +179,7 @@ proc serialize(app: App): string =
   for node in app.nodes:
     result &= "$#|$#|$#,$#\n" % [node.inputsDraft, node.signalDraft, $node.position.x, $node.position.y]
 
-proc deserialize(s: string): App =
+proc deserialize(s: string, env: Environment): App =
   result = App(nodes: @[], outputs: newTable[int, Signal]())
   for line in s.splitLines:
     let draft = line.split("|")
@@ -188,12 +188,16 @@ proc deserialize(s: string): App =
     let position = draft[2].split(",")
     var node = Node(
       id: result.nodes.len,
+      inputs: @[],
+      signal: 0,
       inputsDraft: draft[0],
       signalDraft: draft[1],
       position: (position[0].parseInt, position[1].parseInt)
     )
-    node.alignBars
     result.nodes &= node
+    result.commitNode(node)
+  for i in 0..<MAX_STREAMS:
+    env.streams[i].signal = result.getInput(i)
 
 proc run*(env: Environment) =
   var nb = newNimbox()
@@ -294,7 +298,7 @@ proc run*(env: Environment) =
         of '/':
           "dump.txt".writeFile(app.serialize)
         of '\\':
-          app = "dump.txt".readFile.deserialize
+          app = "dump.txt".readFile.deserialize(env)
         else: discard
       else: discard
     of EventType.Mouse:

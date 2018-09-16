@@ -42,7 +42,7 @@ proc `+=`(p1: var Point, p2: Point) =
 
 proc width(node: Node): int =
   max(
-    node.inputsDraft.len + 1 + ($node.id).len,
+    node.inputsDraft.len + 1 + ($node.id).len + 2,
     node.signalDraft.len
   ) + 2
 
@@ -68,14 +68,14 @@ proc signalBarWidth(node: Node): int = node.signalDraft.strip.len
 proc alignBars(node: var Node) =
   let delta = node.ioBarWidth - node.signalBarWidth
   if delta > 0:
-    node.inputsDraft = node.inputsDraft.strip & spaces(1)
-    node.signalDraft = node.signalDraft.strip & spaces(delta + 1)
+    node.inputsDraft = spaces(1) & node.inputsDraft.strip & spaces(1)
+    node.signalDraft = spaces(1) & node.signalDraft.strip & spaces(delta + 1)
   elif delta < 0:
-    node.inputsDraft = node.inputsDraft.strip & spaces(1 - delta)
-    node.signalDraft = node.signalDraft.strip & spaces(1)
+    node.inputsDraft = spaces(1) & node.inputsDraft.strip & spaces(1 - delta)
+    node.signalDraft = spaces(1) & node.signalDraft.strip & spaces(1)
   else:
-    node.inputsDraft = node.inputsDraft.strip & spaces(1)
-    node.signalDraft = node.signalDraft.strip & spaces(1)
+    node.inputsDraft = spaces(1) & node.inputsDraft.strip & spaces(1)
+    node.signalDraft = spaces(1) & node.signalDraft.strip & spaces(1)
 
 proc commitNode(app: App, node: var Node) =
   node.inputsDraft = node.inputsDraft.strip
@@ -128,12 +128,12 @@ proc draw(nb: Nimbox, app: App, node: Node) =
   for i in 0..<node.inputsDraft.len:
     nb.print(x + 1 + i, y + 1, $node.inputsDraft[i])
   nb.print(x + 1 + node.inputsDraft.len, y, "╤")
-  nb.print(x + 1 + node.inputsDraft.len, y + 1, "┼")
+  nb.print(x + 1 + node.inputsDraft.len, y + 1, "┼ ")
   nb.print(x + 1 + node.inputsDraft.len, y + 2, "┴")
   let id = $node.id
   for i in 0..<id.len:
-    nb.print(x + width - 1 - id.len + i, y + 1, $id[i])
-  nb.print(x + width - 1, y + 1, "╫")
+    nb.print(x + width - 1 - id.len + i - 1, y + 1, $id[i])
+  nb.print(x + width - 2, y + 1, " ╫")
   nb.print(x, y + 1, "╫")
   for i in 0..<node.signalDraft.len:
     nb.print(x + 1 + i, y + 3, $node.signalDraft[i])

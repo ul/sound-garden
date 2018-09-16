@@ -194,9 +194,7 @@ proc execute*(s: var seq[Signal], cmd: string) =
       echo "Stack is too short"
   of "dup":
     if s.len > 0:
-      let x = s[s.high]
-      let y = Signal(f: x.f, label: "(" & x.label & " dup)")
-      s &= y
+      s &= s[s.high]
     else:
       echo "Stack is too short"
   of "ch0":

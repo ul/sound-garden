@@ -1,9 +1,15 @@
 import audio/[audio, context, signal]
 import environment
 import nimbox
+import os
 import strutils
 import tables
+import times
 import words
+
+const dumpBasename = "dump"
+const dumpExtension = ".txt"
+const dumpFilename = dumpBasename & dumpExtension
 
 type
   Point = tuple[x: int, y: int]
@@ -177,7 +183,12 @@ proc inside(app: App, node: Node, p: Point): bool =
 proc serialize(app: App): string =
   result = ""
   for node in app.nodes:
-    result &= "$#|$#|$#,$#\n" % [node.inputsDraft, node.signalDraft, $node.position.x, $node.position.y]
+    result &= "$#|$#|$#,$#\n" % [
+      node.inputsDraft.strip,
+      node.signalDraft.strip,
+      $node.position.x,
+      $node.position.y
+    ]
 
 proc deserialize(s: string, env: Environment): App =
   result = App(nodes: @[], outputs: newTable[int, Signal]())
@@ -296,9 +307,12 @@ proc run*(env: Environment) =
       of Idle:
         case evt.ch
         of '/':
-          "dump.txt".writeFile(app.serialize)
+          if dumpFilename.fileExists:
+            dumpFilename.copyFile(dumpBasename & $epochTime() & dumpExtension)
+          dumpFilename.writeFile(app.serialize)
         of '\\':
-          app = "dump.txt".readFile.deserialize(env)
+          if dumpFilename.fileExists:
+            app = dumpFilename.readFile.deserialize(env)
         else: discard
       else: discard
     of EventType.Mouse:

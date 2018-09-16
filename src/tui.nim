@@ -101,22 +101,31 @@ proc draw(nb: Nimbox, app: App, node: Node) =
     (x            , y + 4),
     (x + width - 1, y + 4)
   ]
-  for p in crosses:
-    nb.print(p.x, p.y, "+")
+  # for p in crosses:
+    # nb.print(p.x, p.y, "+")
+  nb.print(crosses[0].x, crosses[0].y, "╔")
+  nb.print(crosses[1].x, crosses[1].y, "╗")
+  nb.print(crosses[2].x, crosses[2].y, "╟")
+  nb.print(crosses[3].x, crosses[3].y, "╢")
+  nb.print(crosses[4].x, crosses[4].y, "╚")
+  nb.print(crosses[5].x, crosses[5].y, "╝")
   for i in 1..(width - 2):
-    for j in [0, 2, 4]:
-      nb.print(x + i, y + j, "-")
+    for j in [0, 4]:
+      nb.print(x + i, y + j, "═")
+    nb.print(x + i, y + 2, "─")
   for i in [0, width - 1]:
     for j in [1, 3]:
-      nb.print(x + i, y + j, "|")
+      nb.print(x + i, y + j, "║")
   for i in 0..<node.inputsDraft.len:
     nb.print(x + 1 + i, y + 1, $node.inputsDraft[i])
-  nb.print(x + 1 + node.inputsDraft.len, y + 1, ">")
+  nb.print(x + 1 + node.inputsDraft.len, y, "╤")
+  nb.print(x + 1 + node.inputsDraft.len, y + 1, "┼")
+  nb.print(x + 1 + node.inputsDraft.len, y + 2, "┴")
   let id = $node.id
   for i in 0..<id.len:
     nb.print(x + width - 1 - id.len + i, y + 1, $id[i])
-  nb.print(x + width - 1, y + 1, ">")
-  nb.print(x, y + 1, ">")
+  nb.print(x + width - 1, y + 1, "╫")
+  nb.print(x, y + 1, "╫")
   for i in 0..<node.signalDraft.len:
     nb.print(x + 1 + i, y + 3, $node.signalDraft[i])
 
@@ -136,25 +145,27 @@ proc draw(nb: Nimbox, app: App, node: Node) =
       let dx2 = dx div 2
       let dx3 = dx - dx2
       for i in 0..<dx2:
-        nb.print(iright + 1 + i, ip.y + 1, "-")
+        nb.print(iright + 1 + i, ip.y + 1, "─")
       for i in 0..<dx3:
-        nb.print(x - 1 - i, y + 1, "-")
-      nb.print(iright + 1 + dx2, ip.y + 1, "+")
-      nb.print(x - dx3, y + 1, "+")
-      if ip.y + 1 < y + 1:
+        nb.print(x - 1 - i, y + 1, "─")
+      if ip.y < y:
+        nb.print(iright + 1 + dx2, ip.y + 1, "┐")
+        nb.print(x - dx3, y + 1, "└")
         for y in (ip.y + 2)..y:
-          nb.print(iright + 1 + dx2, y, "|")
-      else:
+          nb.print(iright + 1 + dx2, y, "│")
+      elif ip.y > y:
+        nb.print(iright + 1 + dx2, ip.y + 1, "┘")
+        nb.print(x - dx3, y + 1, "┌")
         for y in (y + 2)..(ip.y):
-          nb.print(iright + 1 + dx2, y, "|")
+          nb.print(iright + 1 + dx2, y, "│")
     elif iright == x:
       let minY = min(y, ip.y)
       let maxY = max(y, ip.y)
       for y in (minY + 5)..(maxY - 1):
-        nb.print(x, y, "|")
+        nb.print(x, y, "│")
     else:
-        nb.print(iright + 1, ip.y + 1, "-@")
-        nb.print(x - 2, y + 1, "@-")
+        nb.print(iright + 1, ip.y + 1, "─⊙")
+        nb.print(x - 2, y + 1, "⊙─")
 
 proc inside(app: App, node: Node, p: Point): bool =
   let c = app.clientPosition(node)

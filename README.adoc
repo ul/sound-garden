@@ -1,15 +1,15 @@
-= 𝔖𝔊
+= Sound Garden
 
 == What?
 
-𝔖𝔊 (Sound Garden) is a text based modular synthesis environment. If you ever considered text like this
+Sound Garden is a text based modular synthesis environment. If you ever considered text like this
 
 ----
 .0625 .5 p 110 s * dup .5 t 0.0625 5 range 0.5 fb swap .125 t 0.0625 5 range 0.5 fb + .1 * 
 ---- 
 
 to be a valid musical notation and sound like https://soundcloud.com/ruslan-prokopchuk/rf-01[this]
-to be a subject of interest then you might find 𝔖𝔊 worthwhile having a look at.
+to be a subject of interest then you might find Sound Garden worthwhile having a look at.
 
 == Why?
 
@@ -17,7 +17,7 @@ There is Sporth, Extempore, SuperCollider, PureData and other excellent mature e
 
 == How?
 
-Continue reading, the rest of the document is 𝔖𝔊 manual.
+Continue reading, the rest of the document is Sound Garden manual.
 
 == Prerequisites
 
@@ -36,25 +36,25 @@ $ brew install nim libsoundio liblo termbox sdl2 just watchexec rlwrap
 
 == Interfaces
 
-𝔖𝔊 has three interfaces:
+Sound Garden has three interfaces:
 
 [horizontal] 
 REPL:: Simple language is available for quick experiments with signals. 
 TUI:: Pseudographics mode to create and connect nodes of signal-producing code. 
-API:: You could drop 𝔖𝔊 into your Nim project and use its audio subsystem and unit generators. Right now this interface is not documented.
+API:: You could drop Sound Garden into your Nim project and use its audio subsystem and unit generators. Right now this interface is not documented.
 
 All interfaces use the same underlying audio signals system. Signal is a function of audio context
 to sample value. Audio context provides the signal with a sample rate, current sample number and
 current channel. Thus every signal is inherently multichannel, but it can choose to produce the
 same sample value for each channel or produce silence in some of them. At the moment the maximum
 number of channels is hardcoded to 2. Signals could be closures which capture other signals and call
-them against audio context to use their value. This is the way the audio graph is built in 𝔖𝔊. Root
+them against audio context to use their value. This is the way the audio graph is built in Sound Garden. Root
 signal then passed to the audio stream and called every sample to produce sound.
 
 == REPL
 
-𝔖𝔊 REPL is operated via simple stack-based language. The only type of element to be put on stack is
-a signal. There are 8 such stacks available. 𝔖𝔊 plays top element of each stack in a separate sound
+Sound Garden REPL is operated via simple stack-based language. The only type of element to be put on stack is
+a signal. There are 8 such stacks available. Sound Garden plays top element of each stack in a separate sound
 stream, simultaneously. Multiple stacks navigation and element transfer is covered in details
 at the end of the section.
 
@@ -86,7 +86,7 @@ Let's make some sound! `440` is a good candidate to be a frequency, let's put in
 What happened? `sine` ugen requires 2 input signals. It consumed them from the top of the stack and
 produced new signal which was put back on the top of the current stack.
 
-To ease such kind of composition, 𝔖𝔊 provides two conveniences:
+To ease such kind of composition, Sound Garden provides two conveniences:
 
 * Words hasn't to be entered one by one. Just separate them with spaces and enter in one go: `440 0 sine`
 * There are shortcuts for some frequently used ugens and their default inputs. E.g. `s` is a shortcut for `sine` which expects only one input, frequency, and sets initial phase to 0: `440 s`
@@ -96,7 +96,7 @@ inputs on the stack (`440 s` and `.1`) and only then apply `*` to them. Also it 
 that ugens consume their inputs from the stack and put their outputs back on the stack, thus after
 executing `440 s .1 *` you will end up with one signal on the stack.
 
-Because 𝔖𝔊 operates exclusively on signals, `sine` frequency has not to be constant: `2 s 1 + 220 *
+Because Sound Garden operates exclusively on signals, `sine` frequency has not to be constant: `2 s 1 + 220 *
 s` is completely legitimate and would produce a wobbling sound.
 
 === Stack inspection
@@ -112,7 +112,7 @@ To check contents of the current stack use the word `dump`:
 [0]>
 ----
 
-Note that 𝔖𝔊 replaced shortcut with a full form. 𝔖𝔊 does its best to label elements on the
+Note that Sound Garden replaced shortcut with a full form. Sound Garden does its best to label elements on the
 stack in the way they could be just copy-pasted to create the same signal, but it's not always
 possible.footnote:[Due to timing and node multicast issues.] Also, `dump` shows only top 10 elements
 of the current stack, to list all elements use `dumpAll`.
@@ -269,7 +269,7 @@ Note that you need to assign variable via var or set before using it. Exceptions
 
 === OSC
 
-𝔖𝔊 embeds OSC server listening to the port 7770. Available endpoints:
+Sound Garden embeds OSC server listening to the port 7770. Available endpoints:
 
 [horizontal]
 /interpret:: s -> interpret string s as if it was entered in the REPL

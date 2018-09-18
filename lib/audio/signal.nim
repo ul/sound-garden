@@ -54,8 +54,10 @@ proc toSignal*(map: FF3, label: string = "f"): Function3 =
 proc channel*(x: Signal, i: int = 0): Signal =
   var sample: float
   proc f(ctx: Context): float =
-    if ctx.channel == i:
+    if ctx.channel == 0:
+      ctx.channel = i
       sample = x.f(ctx)
+      ctx.channel = 0
     sample
   Signal(f: f, label: "channel " & $i & " of " && x.label)
 

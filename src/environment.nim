@@ -39,7 +39,6 @@ proc init*(): Environment =
   # pre-set variables for quick integration with OSC
   for k in 'a'..'z':
     result.variables[$k] = silence
-    result.oscVariables[$k] = box(0.0)
 
   for i in 0..<MAX_STREAMS:
     let ros = ss.newIOStream

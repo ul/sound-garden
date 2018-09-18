@@ -1,4 +1,23 @@
-= Sound Garden
+= 𝔖𝔊
+
+== What?
+
+𝔖𝔊 (Sound Garden) is a text based modular synthesis environment. If you ever considered text like this
+
+----
+.0625 .5 p 110 s * dup .5 t 0.0625 5 range 0.5 fb swap .125 t 0.0625 5 range 0.5 fb + .1 * 
+---- 
+
+to be a valid musical notation and sound like https://soundcloud.com/ruslan-prokopchuk/rf-01[this]
+to be a subject of interest then you might find 𝔖𝔊 worthwhile having a look at.
+
+== Why?
+
+There is Sporth, Extempore, SuperCollider, PureData and other excellent mature environments out there, why to build own? Because I want to understand how audio synth works and true understanding comes as an ability to re-create subject from the scratch in a different form. More about my position in the upcoming manifesto.
+
+== How?
+
+Continue reading, the rest of the document is 𝔖𝔊 manual.
 
 == Prerequisites
 
@@ -15,10 +34,322 @@
 $ brew install nim libsoundio liblo termbox sdl2 just watchexec rlwrap
 ----
 
-== Build & Run
+== Interfaces
+
+𝔖𝔊 has three interfaces:
+
+[horizontal] 
+REPL:: Simple language is available for quick experiments with signals. 
+TUI:: Pseudographics mode to create and connect nodes of signal-producing code. 
+API:: You could drop 𝔖𝔊 into your Nim project and use its audio subsystem and unit generators. Right now this interface is not documented.
+
+All interfaces use the same underlying audio signals system. Signal is a function of audio context
+to sample value. Audio context provides the signal with a sample rate, current sample number and
+current channel. Thus every signal is inherently multichannel, but it can choose to produce the
+same sample value for each channel or produce silence in some of them. At the moment the maximum
+number of channels is hardcoded to 2. Signals could be closures which capture other signals and call
+them against audio context to use their value. This is the way the audio graph is built in 𝔖𝔊. Root
+signal then passed to the audio stream and called every sample to produce sound.
+
+== REPL
+
+𝔖𝔊 REPL is operated via simple stack-based language. The only type of element to be put on stack is
+a signal. There are 8 such stacks available. 𝔖𝔊 plays top element of each stack in a separate sound
+stream, simultaneously. Multiple stacks navigation and element transfer is covered in details
+at the end of the section.
+
+=== Build & Run
 
 ----
 $ just run
 ----
 
+=== First steps
 
+First things first, to exit REPL press CTRL-D. To quickly replace current sound in the active stack with silence, enter `0` and press return.
+
+The simplest signal is just a constant value. To put it on the current stack type a number in the REPL and press return:
+
+----
+[0]> 440
+[0]>
+----
+
+Let's make some sound! `440` is a good candidate to be a frequency, let's put initial phase `0` onto stack and use `sine` unit generator:
+
+----
+[0]> 0
+[0]> sine
+[0]>
+----
+
+What happened? `sine` ugen requires 2 input signals. It consumed them from the top of the stack and
+produced new signal which was put back on the top of the current stack.
+
+To ease such kind of composition, 𝔖𝔊 provides two conveniences:
+
+* Words hasn't to be entered one by one. Just separate them with spaces and enter in one go: `440 0 sine`
+* There are shortcuts for some frequently used ugens and their default inputs. E.g. `s` is a shortcut for `sine` which expects only one input, frequency, and sets initial phase to 0: `440 s`
+
+Arithemics operators are lifted to signal space: `440 s .1 *`. Note that first we need to put both
+inputs on the stack (`440 s` and `.1`) and only then apply `*` to them. Also it worth repeating
+that ugens consume their inputs from the stack and put their outputs back on the stack, thus after
+executing `440 s .1 *` you will end up with one signal on the stack.
+
+Because 𝔖𝔊 operates exclusively on signals, `sine` frequency has not to be constant: `2 s 1 + 220 *
+s` is completely legitimate and would produce a wobbling sound.
+
+=== Stack inspection
+
+To check contents of the current stack use the word `dump`:
+
+----
+[0]> dump
+⓪ 440.0
+[0]> s 
+[0]> dump
+⓪ 440.0 0.0 sine
+[0]>
+----
+
+Note that 𝔖𝔊 replaced shortcut with a full form. 𝔖𝔊 does its best to label elements on the
+stack in the way they could be just copy-pasted to create the same signal, but it's not always
+possible.footnote:[Due to timing and node multicast issues.] Also, `dump` shows only top 10 elements
+of the current stack, to list all elements use `dumpAll`.
+
+It's possible to draw a nice graph of the audiowave in the first channel of current sound stream
+using the word `wave`. This word could be parametrized with a step: `wave:64` would probe the
+audiowave every 64th sample.
+
+----
+[0]> wave
+▲ 1.0
+⠤⠒⠊⠉⠉⠉⠉⠒⠢⢄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⠤⠔⠒⠉⠉⠉⠉⠑⠒⠤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠑⠤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⠔⠊⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠒⢄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠒⢄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡠⠊⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠢⡀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠑⢄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⠔⠊⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠢⢄⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠢⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⠔⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠑⢄⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠢⢄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡠⠊⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠑⠢⡀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠑⠢⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡠⠔⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠒
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠒⠤⢄⣀⣀⣀⣀⠤⠤⠒⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+▼ -1.0
+[0]>
+----
+
+Summary:
+
+[horizontal] 
+dump:: show top 10 elements of stack
+dumpAll:: show all elements of stack
+wave:<N>:: plot sound of first channel of current stream, taking measure each N samples
+
+=== Stack manipulations
+
+[horizontal] 
+empty:: remove all elements in stack
+pop:: remove top element
+dup:: duplicate top element, a -> a a 
+swap:: swap top element with the next one, a b -> b a
+rot:: take 3rd from the top element and put it on the top, a b c -> b c a
+
+=== Oscillators
+
+All oscillators produce signal in range -1..1
+
+[horizontal] 
+saw:: (freq, phase0) -> saw oscillator
+w:: (freq) -> saw with phase0 = 0 
+tri:: (freq, phase0) -> triangle oscillator (symmetric)
+t:: (freq) -> tri with phase0 = 0 
+pulse:: (freq, width, phase0) -> rectangular oscillator with width of positive segment as a ratio of period
+p:: (freq, width) -> pulse with phase0 = 0
+sine:: (freq, phase0) -> sine oscillator
+s:: (freq) -> sine with phase0 = 0 
+cosine:: (freq, phase0)
+tangent:: (freq, phase0)
+hsine:: (freq, phase0) -> hyperbolic sine oscillator
+hcosine:: (freq, phase0)
+htangent:: (freq, phase0)
+
+=== Basics
+
+[horizontal] 
+silence:: () -> alias for constant 0 signal
+whiteNoise, noise, n:: () -> each sample in each channel is the next value provided by pseudo-random generator
+Note that this signal is not multicasted and will output different samples for the same channel and sample number when used as an input for different unit generators
+
+project:: (x, a, b, c, d) -> assuming that signal x varies in the range from a to b linearly project its values to the range from c to d
+Note that ranges are just signals and are allowed to vary in time 
+
+range, r:: (x, c, d) -> same as project with a = -1 and b = 1 
+unit:: (x) -> same as range with c = 0 and d = 1 
+circle:: (x) -> same as range with c = -π and d = π 
+sh:: (trigger, x) -> sample and hold
+db2amp, db2a:: (x) -> decibels to amplitude, base amplitude assumed to be 1.0
+amp2db, a2db:: (x) -> amplitude to decibels, base amplitude assumed to be 1.0
+freq2midi, f2m:: (x) -> frequency to midi pitch
+midi2freq, m2f:: (x) -> midi pitch to frequency
+quantize:: (x, step) -> round signal x values to the nearest step multiplicative
+input, in:: () -> microphone input
+ch0:: (x) -> compute only channel 0 of signal and broadcast it to all channels
+ch1:: (x) -> compute only channel 1 of signal and broadcast it to all channels
+
+=== Math
+
+Binary arithmetic operations are available: `+`, `-`, `*`, `/`, `mod`. If you prefer, you can use aliases `add`, `sub`, `mul`, `div`.
+
+Comparison operators `==`, `!=`, `<`, `<=`, `>`, `>=` return 1 when comparison is true, and 0 otherwise.
+
+Logic operators:
+
+[horizontal] 
+and:: (a, b) -> returns 1 only when both a and b values are equal to 1, otherwise 0
+or:: (a, b) -> returns 1 only when either a or b value is equal to 1, otherwise 0
+
+Note that logic operators semantics are not finalized yet. Please feel free to propose your version.
+
+[horizontal] 
+min:: (a, b)
+max:: (a, b)
+clip:: (x) -> forces signal values to be in the range -1..1 by outputting nearest edge for values outside
+wrap:: (x) -> forces signal values to be in the range -1..1 by wrapping it around the range 
+exp:: (x) -> e^x
+sin:: (x)
+cos:: (x)
+tan:: (x)
+sinh:: (x)
+cosh:: (x)
+tanh:: (x)
+clausen:: (x) -> Clausen function. Note it's expensive to compute
+round:: (x) -> round signal value to the nearest integer
+
+=== Filters
+
+[horizontal] 
+lpf:: (x, freq) -> https://en.wikipedia.org/wiki/Low-pass_filter#Simple_infinite_impulse_response_filter[Simple infinite impulse response low-pass filter]
+hpf:: (x, freq) -> https://en.wikipedia.org/wiki/High-pass_filter#Algorithmic_implementation[Simple infinite impulse response high-pass filter]
+bqlpf, l:: (x, freq) -> biquad LPF as described https://shepazu.github.io/Audio-EQ-Cookbook/audio-eq-cookbook.html[here]
+bqhpf, h:: (x, freq) -> biquad HPF as described https://shepazu.github.io/Audio-EQ-Cookbook/audio-eq-cookbook.html[here]
+prime:: (x) -> delay x by one sample
+delay:: (x, time) -> max delay time is 60 seconds at 48000 sample rate
+fb:: (x, delay, gain) -> feedback echo, max delay is 60 seconds at 48000 sample rate
+
+=== Triggers
+
+[horizontal]
+metro:: (freq) -> emit 1.0 with given frequency, 0.0 all other time
+dmetro:: (period) -> emit 1.0 every given period, 0.0 all other time
+
+=== Envelopes
+
+[horizontal]
+impulse:: (trigger, apex) -> generate exponential impulse which reaches 1.0 in apex seconds and then fades 
+adsr:: (gate, a, d, s, r) -> classic ADSR envelope
+
+=== Modulation
+
+[horizontal]
+fm:: (carrierFreq, modulationFreq, modulationIndex) -> frequency modulated sine oscillator
+pm:: (carrierFreq, modulationFreq, modulationIndex) -> phase modulated sine oscillator
+
+=== Analyzers
+
+[horizontal]
+pitch:: (x) -> pitch detector, implemented as YIN algorithm with block size of 1024 samples and threshold 0.2
+
+=== Variables
+
+[horizontal]
+var:<NAME>:: (x) -> take a signal from the top of stack, wrap it into the variable NAME and put variable back on the stack
+set:<NAME>:: (x) -> consume a signal and assign it to the variable NAME
+get:<NAME>:: () -> signal which current value is the same as of signal in the variable NAME
+unbox::<NAME>:: () -> put signal assigned to the variable NAME on the top of stack; difference from `get` is that when new signal will be assigned to the variable unboxed one will stay the same 
+
+Note that you need to assign variable via var or set before using it. Exceptions is lowercase one-letter variables from 'a' to 'z', they are pre-assigned with constant signal 0 on the start. 
+
+=== OSC
+
+𝔖𝔊 embeds OSC server listening to the port 7770. Available endpoints:
+
+[horizontal]
+/interpret:: s -> interpret string s as if it was entered in the REPL
+/set/NAME:: f -> set special OSC variable NAME to the constant signal of f
+
+To access OSC variables from the REPL use
+
+[horizontal]
+osc:<NAME>:: () -> value of OSC variable, 0 if it was not set yet
+
+=== Tables
+
+[horizontal]
+wtable:<NAME>:<N>, wt:<NAME>:<N>:: (trigger, x) -> on trigger write N samples (for each channel) of signal x to the table NAME. It puts a signal back on the stack which passes through x values.
+rtable:<NAME>:: (indexer) -> read from the table using indexer signal as a position in seconds, with linear interpolation.
+
+=== Multiple stacks
+
+Number of the current stack is displayed in the REPL prompt in brackets:
+
+----
+[0]> next
+[1]>
+----
+
+All stack navigation commands wraps, i.e. if current stack is the last one then any command referencing "next" stack would operate on the first one and vice versa.
+
+[horizontal]
+next:: () -> switch to the next stack
+prev:: () -> switch to the previous stack
+mv>:: (x) -> move signal to the next stack
+<mv:: (x) -> move signal to the previous stack
+mv<:: (x) -> move signal from the next stack
+>mv:: (x) -> move signal from the previous stack
+cp>:: (x) -> copy signal to the next stack
+<cp:: (x) -> copy signal to the previous stack
+cp<:: (x) -> copy signal from the next stack
+>cp:: (x) -> copy signal from the previous stack
+
+== TUI
+
+=== Build & Run
+
+----
+$ just tui
+----
+
+Text user interface mode provides an extension to the REPL mode. It allows to organize snippets of code in
+the same language as in REPL into a graph of interconnected nodes. Each node have its own stack
+initially filled with its input nodes signals. Source code in the node is applied to this stack and
+the top element of resulting stack is used as the output of node.
+
+Let's look into the anatomy of node:
+
+----
+╔═════════╤═══╗                     
+╫ 10 8 11 ┼ 0 ╫                   
+╟─────────┴───╢                  
+║ + s *       ║                
+╚═════════════╝ 
+----
+
+First row consists of indices of input nodes and then index of the current node. Output signals of
+input nodes are put into the stack of current nodes from left to right. In the example above signal
+from the node 10 will be on the bottom of the stack and signal from node 11 will be on the top. Then
+code `+ s *` is executed against that stack. Top element of resulting stack is what other nodes
+will consume if they reference node 0. Also, nodes with indices from 0 to 7 (inclusive) are special
+because their output signal is also played in node's audio stream.
+ 
+To move entire canvas just press left moust button on any space free of nodes and drag around.
+To move the node on canvas, press left mouse button on the node and drag. To edit node's inputs
+right-click on the node's inputs area. To edit node's source code right-click on the node's source
+area. To commit changes left-click somewhere or press return. We recommend to edit inputs first as
+unused signals on the stack would not harm, but having source code which exhaust stack could lead to
+an error.
+
+To quickly save current nodes configuration press `/` (slash). It will be written into the `dump.txt` file in the current working directory. To load configuraion from that file press `\` (backslash).  
+
+To quit TUI press escape.
+
+Obviously, multiple stacks navigation and manipulation commands are not available for use in nodes code.
+
+Variables, OSC integration and tables are not available at the moment in TUI mode but will be in the future.

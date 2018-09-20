@@ -329,18 +329,19 @@ proc run*(env: Environment) =
           if app.state == Idle:
             app.state = Pan
         of Right:
+          var insideNode = false
           for node in app.nodes:
             if app.inside(node, p):
+              insideNode = true
               let c = app.clientPosition(node)
               if p.y == c.y + 1 and p.x > c.x and p.x <= c.x + node.inputsDraft.len:
                 app.state = EditInputs
                 app.activeNode = node
-                break
               elif p.y == c.y + 3 and p.x > c.x and p.x <= c.x + node.signalDraft.len:
                 app.state = EditSignal
                 app.activeNode = node
-                break
-          if app.state == Idle:
+              break
+          if not insideNode:
             let i = app.nodes.len
             var node = Node(
               id: i,

@@ -4,6 +4,7 @@ import basics
 import delays
 import envelopes
 import filters
+import markov
 import maths
 import modulation
 import oscillators
@@ -254,6 +255,7 @@ proc execute*(s: var seq[Signal], cmd: string) =
   of "input", "in", "mic": s &= input
   of "l": s.word(biQuadLPF, "bqlpf", 0.7071)
   of "lpf": s.word(lpf, "lpf")
+  of "markov": s.word(markovSample, "markov")
   of "max": s.word(max, "max")
   of "min": s.word(min, "min")
   of "metro", "m": s.word(metro, "metro")

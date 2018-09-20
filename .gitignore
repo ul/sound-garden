@@ -1,2 +1,6 @@
 nimcache
 target
+dump*.txt
+README.html
+src/sandbox.txt
+lib/lo/headers

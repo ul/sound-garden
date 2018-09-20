@@ -14,13 +14,20 @@
 ##   $Id$
 ## 
 
+when defined(windows):
+  const soname = "lo.dll"
+elif defined(macosx):
+  const soname = "liblo.dylib"
+else:
+  const soname = "liblo.so"
+
 proc lo_throw*(s: lo_server; errnum: cint; message: cstring; path: cstring) {.cdecl,
-    importc: "lo_throw", dynlib: "liblo.dylib".}
+    importc: "lo_throw", dynlib: soname.}
 ## ! Since the liblo error handler does not provide a context pointer,
 ##   it can be provided by associating it with a particular server
 ##   through this thread-safe API.
 
 proc lo_error_get_context*(): pointer {.cdecl, importc: "lo_error_get_context",
-                                     dynlib: "liblo.dylib".}
+                                     dynlib: soname.}
 proc lo_server_set_error_context*(s: lo_server; user_data: pointer) {.cdecl,
-    importc: "lo_server_set_error_context", dynlib: "liblo.dylib".}
+    importc: "lo_server_set_error_context", dynlib: soname.}

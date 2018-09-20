@@ -14,8 +14,10 @@ proc repl*(env: Environment) =
 
 when isMainModule:
   var env = environment.init()
-  discard osc.start(env)
-  if paramCount() > 0 and paramStr(1) == "tui":
+  let args = commandLineParams()
+  if args.contains("osc"):
+    discard osc.start(env)
+  if args.contains("tui"):
     env.run
   else:
     env.repl

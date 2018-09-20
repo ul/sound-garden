@@ -14,6 +14,13 @@
 ##   $Id$
 ##
 
+when defined(windows):
+  const soname = "lo.dll"
+elif defined(macosx):
+  const soname = "liblo.dylib"
+else:
+  const soname = "liblo.so"
+
 import lo/lo_types
 
 ## *
@@ -36,7 +43,7 @@ import lo/lo_types
 ## 
 
 proc lo_server_thread_new*(port: cstring; err_h: lo_err_handler): lo_server_thread {.
-    cdecl, importc: "lo_server_thread_new", dynlib: "liblo.dylib".}
+    cdecl, importc: "lo_server_thread_new", dynlib: soname.}
 ## *
 ##  \brief Create a new server thread to handle incoming OSC
 ##  messages, and join a UDP multicast group.
@@ -57,7 +64,7 @@ proc lo_server_thread_new*(port: cstring; err_h: lo_err_handler): lo_server_thre
 
 proc lo_server_thread_new_multicast*(group: cstring; port: cstring;
                                     err_h: lo_err_handler): lo_server_thread {.
-    cdecl, importc: "lo_server_thread_new_multicast", dynlib: "liblo.dylib".}
+    cdecl, importc: "lo_server_thread_new_multicast", dynlib: soname.}
 ## *
 ##  \brief Create a new server thread to handle incoming OSC
 ##  messages, specifying protocol.
@@ -77,7 +84,7 @@ proc lo_server_thread_new_multicast*(group: cstring; port: cstring;
 
 proc lo_server_thread_new_with_proto*(port: cstring; proto: cint;
                                      err_h: lo_err_handler): lo_server_thread {.
-    cdecl, importc: "lo_server_thread_new_with_proto", dynlib: "liblo.dylib".}
+    cdecl, importc: "lo_server_thread_new_with_proto", dynlib: soname.}
 ## *
 ##  \brief Create a new server thread, taking port and the optional
 ##  multicast group IP from an URL string.
@@ -90,7 +97,7 @@ proc lo_server_thread_new_with_proto*(port: cstring; proto: cint;
 ## 
 
 proc lo_server_thread_new_from_url*(url: cstring; err_h: lo_err_handler): lo_server_thread {.
-    cdecl, importc: "lo_server_thread_new_from_url", dynlib: "liblo.dylib".}
+    cdecl, importc: "lo_server_thread_new_from_url", dynlib: soname.}
 ## *
 ##  \brief Free memory taken by a server thread
 ## 
@@ -98,7 +105,7 @@ proc lo_server_thread_new_from_url*(url: cstring; err_h: lo_err_handler): lo_ser
 ## 
 
 proc lo_server_thread_free*(st: lo_server_thread) {.cdecl,
-    importc: "lo_server_thread_free", dynlib: "liblo.dylib".}
+    importc: "lo_server_thread_free", dynlib: soname.}
 ## *
 ##  \brief Add an OSC method to the specifed server thread.
 ## 
@@ -117,7 +124,7 @@ proc lo_server_thread_free*(st: lo_server_thread) {.cdecl,
 proc lo_server_thread_add_method*(st: lo_server_thread; path: cstring;
                                  typespec: cstring; h: lo_method_handler;
                                  user_data: pointer): lo_method {.cdecl,
-    importc: "lo_server_thread_add_method", dynlib: "liblo.dylib".}
+    importc: "lo_server_thread_add_method", dynlib: soname.}
 ## *
 ##  \brief Delete an OSC method from the specifed server thread.
 ## 
@@ -129,7 +136,7 @@ proc lo_server_thread_add_method*(st: lo_server_thread; path: cstring;
 
 proc lo_server_thread_del_method*(st: lo_server_thread; path: cstring;
                                  typespec: cstring) {.cdecl,
-    importc: "lo_server_thread_del_method", dynlib: "liblo.dylib".}
+    importc: "lo_server_thread_del_method", dynlib: soname.}
 ## *
 ##  \brief Delete an OSC method from the specified server thread.
 ## 
@@ -140,7 +147,7 @@ proc lo_server_thread_del_method*(st: lo_server_thread; path: cstring;
 ## 
 
 proc lo_server_thread_del_lo_method*(st: lo_server_thread; m: lo_method): cint {.
-    cdecl, importc: "lo_server_thread_del_lo_method", dynlib: "liblo.dylib".}
+    cdecl, importc: "lo_server_thread_del_lo_method", dynlib: soname.}
 ## *
 ##  \brief Set an init and/or a cleanup function to the specifed server thread.
 ## 
@@ -158,7 +165,7 @@ proc lo_server_thread_set_callbacks*(st: lo_server_thread;
                                     init: lo_server_thread_init_callback;
                                     cleanup: lo_server_thread_cleanup_callback;
                                     user_data: pointer) {.cdecl,
-    importc: "lo_server_thread_set_callbacks", dynlib: "liblo.dylib".}
+    importc: "lo_server_thread_set_callbacks", dynlib: soname.}
 ## *
 ##  \brief Start the server thread
 ## 
@@ -167,7 +174,7 @@ proc lo_server_thread_set_callbacks*(st: lo_server_thread;
 ## 
 
 proc lo_server_thread_start*(st: lo_server_thread): cint {.cdecl,
-    importc: "lo_server_thread_start", dynlib: "liblo.dylib".}
+    importc: "lo_server_thread_start", dynlib: soname.}
 ## *
 ##  \brief Stop the server thread
 ## 
@@ -176,13 +183,13 @@ proc lo_server_thread_start*(st: lo_server_thread): cint {.cdecl,
 ## 
 
 proc lo_server_thread_stop*(st: lo_server_thread): cint {.cdecl,
-    importc: "lo_server_thread_stop", dynlib: "liblo.dylib".}
+    importc: "lo_server_thread_stop", dynlib: soname.}
 ## *
 ##  \brief Return the port number that the server thread has bound to.
 ## 
 
 proc lo_server_thread_get_port*(st: lo_server_thread): cint {.cdecl,
-    importc: "lo_server_thread_get_port", dynlib: "liblo.dylib".}
+    importc: "lo_server_thread_get_port", dynlib: soname.}
 ## *
 ##  \brief Return a URL describing the address of the server thread.
 ## 
@@ -190,7 +197,7 @@ proc lo_server_thread_get_port*(st: lo_server_thread): cint {.cdecl,
 ## 
 
 proc lo_server_thread_get_url*(st: lo_server_thread): cstring {.cdecl,
-    importc: "lo_server_thread_get_url", dynlib: "liblo.dylib".}
+    importc: "lo_server_thread_get_url", dynlib: soname.}
 ## *
 ##  \brief Return the lo_server for a lo_server_thread
 ## 
@@ -199,15 +206,15 @@ proc lo_server_thread_get_url*(st: lo_server_thread): cstring {.cdecl,
 ## 
 
 proc lo_server_thread_get_server*(st: lo_server_thread): lo_server {.cdecl,
-    importc: "lo_server_thread_get_server", dynlib: "liblo.dylib".}
+    importc: "lo_server_thread_get_server", dynlib: soname.}
 ## * \brief Return true if there are scheduled events (eg. from bundles) waiting
 ##  to be dispatched by the thread
 
 proc lo_server_thread_events_pending*(st: lo_server_thread): cint {.cdecl,
-    importc: "lo_server_thread_events_pending", dynlib: "liblo.dylib".}
+    importc: "lo_server_thread_events_pending", dynlib: soname.}
 proc lo_server_thread_set_error_context*(st: lo_server_thread; user_data: pointer) {.
-    cdecl, importc: "lo_server_thread_set_error_context", dynlib: "liblo.dylib".}
+    cdecl, importc: "lo_server_thread_set_error_context", dynlib: soname.}
 ## * \brief Pretty-print a lo_server_thread object.
 
 proc lo_server_thread_pp*(st: lo_server_thread) {.cdecl,
-    importc: "lo_server_thread_pp", dynlib: "liblo.dylib".}
+    importc: "lo_server_thread_pp", dynlib: soname.}

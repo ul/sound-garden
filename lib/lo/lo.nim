@@ -16,7 +16,14 @@
 
 ## *
 ##  \file lo.h The liblo main headerfile and high-level API functions.
-## 
+##
+
+when defined(windows):
+  const soname = "lo.dll"
+elif defined(macosx):
+  const soname = "liblo.dylib"
+else:
+  const soname = "liblo.so"
 
 import
   lo/lo_endian, lo/lo_types, lo/lo_osc_types, lo/lo_errors, lo/lo_lowlevel,
@@ -46,7 +53,7 @@ import
 ## 
 
 proc lo_address_new*(host: cstring; port: cstring): lo_address {.cdecl,
-    importc: "lo_address_new", dynlib: "liblo.dylib".}
+    importc: "lo_address_new", dynlib: soname.}
 ## *
 ##  \brief Declare an OSC destination, given IP address and port number,
 ##  specifying protocol.
@@ -64,7 +71,7 @@ proc lo_address_new*(host: cstring; port: cstring): lo_address {.cdecl,
 ## 
 
 proc lo_address_new_with_proto*(proto: cint; host: cstring; port: cstring): lo_address {.
-    cdecl, importc: "lo_address_new_with_proto", dynlib: "liblo.dylib".}
+    cdecl, importc: "lo_address_new_with_proto", dynlib: soname.}
 ## *
 ##  \brief Create a lo_address object from an OSC URL.
 ## 
@@ -72,13 +79,13 @@ proc lo_address_new_with_proto*(proto: cint; host: cstring; port: cstring): lo_a
 ## 
 
 proc lo_address_new_from_url*(url: cstring): lo_address {.cdecl,
-    importc: "lo_address_new_from_url", dynlib: "liblo.dylib".}
+    importc: "lo_address_new_from_url", dynlib: soname.}
 ## *
 ##  \brief Free the memory used by the lo_address object
 ## 
 
 proc lo_address_free*(t: lo_address) {.cdecl, importc: "lo_address_free",
-                                    dynlib: "liblo.dylib".}
+                                    dynlib: soname.}
 ## *
 ##  \brief Set the Time-to-Live value for a given target address.
 ##  
@@ -91,7 +98,7 @@ proc lo_address_free*(t: lo_address) {.cdecl, importc: "lo_address_free",
 ## 
 
 proc lo_address_set_ttl*(t: lo_address; ttl: cint) {.cdecl,
-    importc: "lo_address_set_ttl", dynlib: "liblo.dylib".}
+    importc: "lo_address_set_ttl", dynlib: soname.}
 ## *
 ##  \brief Get the Time-to-Live value for a given target address.
 ##  
@@ -100,7 +107,7 @@ proc lo_address_set_ttl*(t: lo_address; ttl: cint) {.cdecl,
 ## 
 
 proc lo_address_get_ttl*(t: lo_address): cint {.cdecl, importc: "lo_address_get_ttl",
-    dynlib: "liblo.dylib".}
+    dynlib: soname.}
 ## *
 ##  \brief Send a OSC formatted message to the address specified.
 ## 
@@ -120,7 +127,7 @@ proc lo_address_get_ttl*(t: lo_address): cint {.cdecl, importc: "lo_address_get_
 ## 
 
 proc lo_send*(targ: lo_address; path: cstring; `type`: cstring): cint {.varargs, cdecl,
-    importc: "lo_send", dynlib: "liblo.dylib".}
+    importc: "lo_send", dynlib: soname.}
 ## *
 ##  \brief Send a OSC formatted message to the address specified, 
 ##  from the same socket as the specified server.
@@ -147,7 +154,7 @@ proc lo_send*(targ: lo_address; path: cstring; `type`: cstring): cint {.varargs,
 
 proc lo_send_from*(targ: lo_address; `from`: lo_server; ts: lo_timetag; path: cstring;
                   `type`: cstring): cint {.varargs, cdecl, importc: "lo_send_from",
-                                        dynlib: "liblo.dylib".}
+                                        dynlib: soname.}
 ## *
 ##  \brief Send a OSC formatted message to the address specified, scheduled to
 ##  be dispatch at some time in the future.
@@ -172,21 +179,21 @@ proc lo_send_from*(targ: lo_address; `from`: lo_server; ts: lo_timetag; path: cs
 
 proc lo_send_timestamped*(targ: lo_address; ts: lo_timetag; path: cstring;
                          `type`: cstring): cint {.varargs, cdecl,
-    importc: "lo_send_timestamped", dynlib: "liblo.dylib".}
+    importc: "lo_send_timestamped", dynlib: soname.}
 ## *
 ##  \brief Return the error number from the last failed lo_send() or
 ##  lo_address_new() call
 ## 
 
 proc lo_address_errno*(a: lo_address): cint {.cdecl, importc: "lo_address_errno",
-    dynlib: "liblo.dylib".}
+    dynlib: soname.}
 ## *
 ##  \brief Return the error string from the last failed lo_send() or
 ##  lo_address_new() call
 ## 
 
 proc lo_address_errstr*(a: lo_address): cstring {.cdecl,
-    importc: "lo_address_errstr", dynlib: "liblo.dylib".}
+    importc: "lo_address_errstr", dynlib: soname.}
 ## *
 ##  \brief Create a new OSC blob type.
 ## 
@@ -196,12 +203,12 @@ proc lo_address_errstr*(a: lo_address): cstring {.cdecl,
 ## 
 
 proc lo_blob_new*(size: int32_t; data: pointer): lo_blob {.cdecl,
-    importc: "lo_blob_new", dynlib: "liblo.dylib".}
+    importc: "lo_blob_new", dynlib: soname.}
 ## *
 ##  \brief Free the memory taken by a blob
 ## 
 
-proc lo_blob_free*(b: lo_blob) {.cdecl, importc: "lo_blob_free", dynlib: "liblo.dylib".}
+proc lo_blob_free*(b: lo_blob) {.cdecl, importc: "lo_blob_free", dynlib: soname.}
 ## *
 ##  \brief Return the amount of valid data in a lo_blob object.
 ## 
@@ -209,14 +216,14 @@ proc lo_blob_free*(b: lo_blob) {.cdecl, importc: "lo_blob_free", dynlib: "liblo.
 ## 
 
 proc lo_blob_datasize*(b: lo_blob): uint32_t {.cdecl, importc: "lo_blob_datasize",
-    dynlib: "liblo.dylib".}
+    dynlib: soname.}
 ## *
 ##  \brief Return a pointer to the start of the blob data to allow contents to
 ##  be changed.
 ## 
 
 proc lo_blob_dataptr*(b: lo_blob): pointer {.cdecl, importc: "lo_blob_dataptr",
-    dynlib: "liblo.dylib".}
+    dynlib: soname.}
 ## *
 ##  \brief Get information on the version of liblo current in use.
 ## 
@@ -248,7 +255,7 @@ proc lo_blob_dataptr*(b: lo_blob): pointer {.cdecl, importc: "lo_blob_dataptr",
 proc lo_version*(verstr: cstring; verstr_size: cint; major: ptr cint; minor: ptr cint;
                 extra: cstring; extra_size: cint; lt_major: ptr cint;
                 lt_minor: ptr cint; lt_bug: ptr cint) {.cdecl, importc: "lo_version",
-    dynlib: "liblo.dylib".}
+    dynlib: soname.}
 ## * @}
 
 import

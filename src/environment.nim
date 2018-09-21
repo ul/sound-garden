@@ -23,7 +23,7 @@ proc currentStream*(env: Environment): IOStream = env.streams[env.head]
 proc currentStack*(env: Environment): var seq[Signal] = env.stacks[env.head]
 
 # TODO prefer Result[Environment] over quit
-proc init*(): Environment =
+proc init*(withInput: bool): Environment =
   result = Environment(
     variables: newTable[string, Signal](),
     samplers: newTable[string, Sampler](),
@@ -31,7 +31,7 @@ proc init*(): Environment =
   )
 
   # init audio system
-  let rss = newSoundSystem()
+  let rss = newSoundSystem(withInput)
   if rss.kind == Err:
     quit rss.msg
   let ss = rss.value
@@ -41,7 +41,7 @@ proc init*(): Environment =
     result.variables[$k] = silence
 
   for i in 0..<MAX_STREAMS:
-    let ros = ss.newIOStream
+    let ros = ss.newIOStream(withInput)
     if ros.kind == Err:
       quit ros.msg
     let dac = ros.value
@@ -51,6 +51,7 @@ proc init*(): Environment =
       result.channelCount = dac.outStream.layout.channelCount
       echo "Sample Rate:\t", dac.outStream.sampleRate
       echo "Channels:\t", result.channelCount
-      echo "Input Latency:\t", (1000.0 * dac.inStream.softwareLatency).round(1), " ms"
+      if withInput:
+        echo "Input Latency:\t", (1000.0 * dac.inStream.softwareLatency).round(1), " ms"
       echo "Output Latency:\t", (1000.0 * dac.outStream.softwareLatency).round(1), " ms"
 

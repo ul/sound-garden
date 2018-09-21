@@ -34,6 +34,12 @@ Continue reading, the rest of the document is Sound Garden manual.
 $ brew install nim libsoundio liblo termbox sdl2 just watchexec rlwrap
 ----
 
+== Build
+
+----
+$ just build
+----
+
 == Interfaces
 
 Sound Garden has three interfaces:
@@ -58,7 +64,7 @@ a signal. There are 8 such stacks available. Sound Garden plays top element of e
 stream, simultaneously. Multiple stacks navigation and element transfer is covered in details
 at the end of the section.
 
-=== Build & Run
+=== Run
 
 ----
 $ just run
@@ -190,7 +196,7 @@ amp2db, a2db:: (x) -> amplitude to decibels, base amplitude assumed to be 1.0
 freq2midi, f2m:: (x) -> frequency to midi pitch
 midi2freq, m2f:: (x) -> midi pitch to frequency
 quantize:: (x, step) -> round signal x values to the nearest step multiplicative
-input, in:: () -> microphone input
+input, in:: () -> microphone input. Must be enabled via `--with-input` flag: `just run --with-input`
 ch0:: (x) -> compute only channel 0 of signal and broadcast it to all channels
 ch1:: (x) -> compute only channel 1 of signal and broadcast it to all channels
 
@@ -269,7 +275,8 @@ Note that you need to assign variable via var or set before using it. Exceptions
 
 === OSC
 
-Sound Garden embeds OSC server listening to the port 7770. Available endpoints:
+Sound Garden embeds OSC server. To start it listening to the port 7770 pass `--with-osc` flag: `just run --with-osc`.
+Available endpoints:
 
 [horizontal]
 /interpret:: s -> interpret string s as if it was entered in the REPL
@@ -316,6 +323,8 @@ cp<:: (x) -> copy signal from the next stack
 ----
 $ just tui
 ----
+
+Pass `--with-input` if you want to use input signal: `just tui --with-input`
 
 Text user interface mode provides an extension to the REPL mode. It allows to organize snippets of code in
 the same language as in REPL into a graph of interconnected nodes. Each node have its own stack

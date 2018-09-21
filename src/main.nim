@@ -13,11 +13,11 @@ proc repl*(env: Environment) =
       break
 
 when isMainModule:
-  var env = environment.init()
   let args = commandLineParams()
-  if args.contains("osc"):
+  var env = environment.init(args.contains("--with-input"))
+  if args.contains("--with-osc"):
     discard osc.start(env)
-  if args.contains("tui"):
+  if args.contains("--tui"):
     env.run
   else:
     env.repl

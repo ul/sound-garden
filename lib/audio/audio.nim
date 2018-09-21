@@ -48,13 +48,16 @@ proc writeCallback(outStream: ptr SoundIoOutStream, frameCountMin: cint, frameCo
 
     let ptrAreas = cast[int](areas)
     let ptrMonitor = cast[int](monitor.writePtr)
-    let ptrInput = cast[int](input.readPtr)
+    var ptrInput: int
+    if not input.isNil:
+      ptrInput = cast[int](input.readPtr)
 
     for frame in 0..<frameCount:
       let offset = frame * channelCount
       for channel in 0..<channelCount:
         ctx.channel = channel
-        ctx.input = cast[ptr float](ptrInput + (offset + channel) * sizeOfSample)[]
+        if not input.isNil:
+          ctx.input = cast[ptr float](ptrInput + (offset + channel) * sizeOfSample)[]
 
         let ptrArea = cast[ptr SoundIoChannelArea](ptrAreas + channel*sizeOfChannelArea)
         var ptrSample = cast[ptr float32](cast[int](ptrArea.pointer) + frame*ptrArea.step)
@@ -67,7 +70,8 @@ proc writeCallback(outStream: ptr SoundIoOutStream, frameCountMin: cint, frameCo
 
     let bytesProcessed = cint(frameCount * channelCount * sizeOfSample)
     monitor.advanceWritePtr(bytesProcessed)
-    input.advanceReadPtr(bytesProcessed)
+    if not input.isNil:
+      input.advanceReadPtr(bytesProcessed)
 
     err = outStream.endWrite
     if err > 0 and err != cint(SoundIoError.Underflow):
@@ -136,7 +140,7 @@ proc sserr(msg: string): Result[SoundSystem] =
 proc ioserr(msg: string): Result[IOStream] =
   return Result[IOStream](kind: Err, msg: msg)
 
-proc newSoundSystem*(): Result[SoundSystem] =
+proc newSoundSystem*(withInput: bool): Result[SoundSystem] =
   let sio = soundioCreate()
   if sio.isNil:
     return sserr "out of mem"
@@ -148,16 +152,18 @@ proc newSoundSystem*(): Result[SoundSystem] =
   echo "Backend: \t", sio.currentBackend.name
   sio.flushEvents
 
-  let inDevId = sio.defaultInputDeviceIndex
-  if inDevId < 0:
-    return sserr "Input device is not found"
-  let inDevice = sio.getInputDevice(inDevId)
-  if inDevice.isNil:
-    return sserr "out of mem"
-  if inDevice.probeError > 0:
-    return sserr "Cannot probe device"
+  var inDevice: ptr SoundIoDevice
+  if withInput:
+    let inDevId = sio.defaultInputDeviceIndex
+    if inDevId < 0:
+      return sserr "Input device is not found"
+    inDevice = sio.getInputDevice(inDevId)
+    if inDevice.isNil:
+      return sserr "out of mem"
+    if inDevice.probeError > 0:
+      return sserr "Cannot probe device"
 
-  echo "Input device:\t", inDevice.name
+    echo "Input device:\t", inDevice.name
 
   let outDevId = sio.defaultOutputDeviceIndex
   if outDevId < 0:
@@ -174,37 +180,54 @@ proc newSoundSystem*(): Result[SoundSystem] =
     kind: Ok,
     value: SoundSystem(sio: sio, inDevice: inDevice, outDevice: outDevice))
 
-proc newIOStream*(ss: SoundSystem): Result[IOStream] =
+proc newIOStream*(ss: SoundSystem, withInput: bool): Result[IOStream] =
   ss.outDevice.sortChannelLayouts
-  let layout = bestMatchingChannelLayout(
-    ss.outDevice.layouts, ss.outDevice.layoutCount,
-    ss.inDevice.layouts, ss.inDevice.layoutCount,
-  )
+  var layout: ptr SoundIoChannelLayout
+
+  if withInput:
+    layout = bestMatchingChannelLayout(
+      ss.outDevice.layouts, ss.outDevice.layoutCount,
+      ss.inDevice.layouts, ss.inDevice.layoutCount,
+    )
+  else:
+    layout = bestMatchingChannelLayout(
+      ss.outDevice.layouts, ss.outDevice.layoutCount,
+      ss.outDevice.layouts, ss.outDevice.layoutCount,
+    )
+
   if layout.isNil:
     return ioserr "Channel layouts not compatible"
 
   var sampleRate: cint
   for sr in SAMPLE_RATES:
     let csr = cast[cint](sr)
-    if ss.inDevice.supportsSampleRate(csr) and ss.outDevice.supportsSampleRate(csr):
-      sampleRate = csr
-      break
+    if withInput:
+      if ss.inDevice.supportsSampleRate(csr) and ss.outDevice.supportsSampleRate(csr):
+        sampleRate = csr
+        break
+    else:
+      if ss.outDevice.supportsSampleRate(csr):
+        sampleRate = csr
+        break
 
   if sampleRate == 0:
     return ioserr "Incompatible sound rates"
 
-  let inStream = ss.inDevice.inStreamCreate
-  inStream.format = SAMPLE_FORMAT
-  inStream.sampleRate = sampleRate
-  inStream.layout = layout[]
-  inStream.readCallback = readCallback
+  var err: cint
+  var inStream: ptr SoundIoInStream
+  if withInput:
+    inStream = ss.inDevice.inStreamCreate
+    inStream.format = SAMPLE_FORMAT
+    inStream.sampleRate = sampleRate
+    inStream.layout = layout[]
+    inStream.readCallback = readCallback
 
-  var err = inStream.open
-  if err > 0:
-    return ioserr "Unable to open input device: " & $err.strerror
+    err = inStream.open
+    if err > 0:
+      return ioserr "Unable to open input device: " & $err.strerror
 
-  if inStream.layoutError > 0:
-    return ioserr "Unable to set input channel layout: " & $inStream.layoutError.strerror
+    if inStream.layoutError > 0:
+      return ioserr "Unable to set input channel layout: " & $inStream.layoutError.strerror
 
   let outStream = ss.outDevice.outStreamCreate
   outStream.format = SAMPLE_FORMAT
@@ -220,7 +243,8 @@ proc newIOStream*(ss: SoundSystem): Result[IOStream] =
     return ioserr "Unable to set output channel layout: " & $outStream.layoutError.strerror
 
   let ptrUserdata = UserData.sizeof.alloc
-  inStream.userdata = ptrUserdata
+  if withInput:
+    inStream.userdata = ptrUserdata
   outStream.userdata = ptrUserdata
 
   var ctx = Context(channel: 0, sampleNumber: 0, sampleRate: sampleRate)
@@ -235,13 +259,15 @@ proc newIOStream*(ss: SoundSystem): Result[IOStream] =
   userdata.monitor = ss.sio.ringBufferCreate(cast[cint](
     MONITOR_MAX_DUR * sampleRate * layout.channelCount * sizeOfSample
   ))
-  userdata.input = ss.sio.ringBufferCreate(cast[cint]((
-    inStream.softwareLatency * (4 * sampleRate * layout.channelCount * sizeOfSample).toFloat
-  ).toInt))
+  if withInput:
+    userdata.input = ss.sio.ringBufferCreate(cast[cint]((
+      inStream.softwareLatency * (4 * sampleRate * layout.channelCount * sizeOfSample).toFloat
+    ).toInt))
 
-  err = inStream.start
-  if err > 0:
-    return ioserr "Unable to start input stream: " & $err.strerror
+  if withInput:
+    err = inStream.start
+    if err > 0:
+      return ioserr "Unable to start input stream: " & $err.strerror
 
   err = outStream.start
   if err > 0:

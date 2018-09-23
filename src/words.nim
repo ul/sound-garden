@@ -120,7 +120,7 @@ proc word(s: var seq[Signal], f: proc(a, b, c, d: Signal): Signal, label: string
   let b = s.pop
   let a = s.pop
   var result = f(a, b, c, d)
-  result.label = a.label & " " & b.label & " " & c.label & " " & d.label & label
+  result.label = a.label & " " & b.label & " " & c.label & " " & d.label & " " & label
   s &= result
 
 proc word(s: var seq[Signal], f: proc(a, b, c, _: Signal): Signal, label: string, d: Signal) =
@@ -131,7 +131,7 @@ proc word(s: var seq[Signal], f: proc(a, b, c, _: Signal): Signal, label: string
   let b = s.pop
   let a = s.pop
   var result = f(a, b, c, d)
-  result.label = a.label & " " & b.label & " " & c.label & " " & d.label & label
+  result.label = a.label & " " & b.label & " " & c.label & " " & d.label & " " & label
   s &= result
 
 proc word(s: var seq[Signal], f: proc(a, b, c, d, e: Signal): Signal, label: string) =
@@ -144,7 +144,7 @@ proc word(s: var seq[Signal], f: proc(a, b, c, d, e: Signal): Signal, label: str
   let b = s.pop
   let a = s.pop
   var result = f(a, b, c, d, e)
-  result.label = a.label & " " & b.label & " " & c.label & " " & d.label & " " & e.label & label
+  result.label = a.label & " " & b.label & " " & c.label & " " & d.label & " " & e.label & " " & label
   s &= result
 
 proc execute*(s: var seq[Signal], cmd: string) =

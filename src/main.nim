@@ -1,6 +1,7 @@
 import environment
 import interpreter
 import os
+import strutils
 when not defined(windows):
   import osc
   import tui
@@ -9,7 +10,10 @@ proc repl*(env: Environment) =
   while true:
     stdout.write "[", env.head, "]> "
     try:
-      env.interpret(stdin.readLine)
+      let line = stdin.readLine.strip
+      if line == "quit":
+        break
+      env.interpret(line)
     except EOFError:
       break
 

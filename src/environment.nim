@@ -36,7 +36,7 @@ proc init*(withInput: bool): Environment =
     quit rss.msg
   let ss = rss.value
 
-  # pre-set variables for quick integration with OSC
+  # pre-set variables for quick experiments
   for k in 'a'..'z':
     result.variables[$k] = silence
 

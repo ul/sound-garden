@@ -72,7 +72,8 @@ $ just run
 
 === First steps
 
-First things first, to exit REPL press CTRL-D. To quickly replace current sound in the active stack with silence, enter `0` and press return.
+First things first, to exit REPL press CTRL-D or type `quit` and press return. To quickly replace
+current sound in the active stack with silence, enter `0` and press return.
 
 The simplest signal is just a constant value. To put it on the current stack type a number in the REPL and press return:
 

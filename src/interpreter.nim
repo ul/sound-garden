@@ -14,10 +14,13 @@ proc interpret*(env: Environment, line: string) =
     let c = cmd.split(":")
     case c[0]
     of "wave":
-      var step = 1
-      if c.len > 1:
-        step = c[1].parseInt
-      env.currentStream.wave(step)
+      when defined(windows):
+        echo "wave is not supported on Windows"
+      else:
+        var step = 1
+        if c.len > 1:
+          step = c[1].parseInt
+        env.currentStream.wave(step)
     of "next":
       env.head = (env.head + 1) mod MAX_STREAMS
     of "prev":

@@ -64,8 +64,9 @@ proc writeCallback(outStream: ptr SoundIoOutStream, frameCountMin: cint, frameCo
         let sample = signal(ctx)
         ptrSample[] = sample.float32
 
-        var ptrMonitorSample = cast[ptr float](ptrMonitor + (offset + channel) * sizeOfSample)
-        ptrMonitorSample[] = sample
+        when not defined(windows):
+          var ptrMonitorSample = cast[ptr float](ptrMonitor + (offset + channel) * sizeOfSample)
+          ptrMonitorSample[] = sample
       ctx.sampleNumber += 1
 
     let bytesProcessed = cint(frameCount * channelCount * sizeOfSample)

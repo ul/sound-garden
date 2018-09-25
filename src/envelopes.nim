@@ -53,3 +53,21 @@ proc adsr*(trigger, a, d, s, r: Signal): Signal =
       s.label && ", " &&
       r.label && ")" 
   )
+
+proc line*(target, time: Signal): Signal =
+  let time = time * sampleRate
+  let targetPrime = target.prime
+  let targetChanged = target != targetPrime
+  let value = targetChanged.sampleAndHold(targetPrime)
+  let delta = sampleNumber - targetChanged.sampleAndHold(sampleNumber)
+  proc f(ctx: Context): float =
+    let delta  = delta.f(ctx)
+    let value  = value.f(ctx)
+    let time   = time.f(ctx)
+    let target = target.f(ctx)
+    if delta <= 0.0:
+      return value
+    if delta >= time:
+      return target
+    return value + (target - value) * delta / time
+  Signal(f: f, label: "line(" && target.label && ", " && time.label && ")")

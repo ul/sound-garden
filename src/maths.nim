@@ -30,6 +30,18 @@ proc `*.`*(a: Signal, b: Signal): Signal =
      return x * a.f(ctx)
   Signal(f: f, label: "(" && a.label && " * " && b.label && ")")
 
+proc `*`*(a: float, b: Signal): Signal =
+  Signal(
+    f: proc(ctx: Context): float = a * b.f(ctx),
+    label: "(" && $a && " * " && b.label && ")"
+  )
+
+proc `*`*(a: Signal, b: float): Signal =
+  Signal(
+    f: proc(ctx: Context): float = a.f(ctx) * b,
+    label: "(" && a.label && " * " && $b && ")"
+  )
+
 proc `*`*(a: Signal, b: Signal): Signal =
   Signal(
     f: proc(ctx: Context): float = a.f(ctx) * b.f(ctx),

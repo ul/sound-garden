@@ -14,6 +14,11 @@ proc saw*(freq: Signal, phase0: Signal = 0): Signal =
     return (p0 + phases[i]).mod(2.0) - 1.0
   Signal(f: f, label: "saw(" && freq.label && ", " && phase0.label && ")").mult
 
+proc saw*(freq: float, phase0: float = 0): Signal =
+  let freq = 2.0 * freq
+  proc f(ctx: Context): float = (freq * ctx.time + phase0).mod(2.0) - 1.0
+  Signal(f: f, label: "saw(" && $freq && ", " && $phase0 && ")").mult
+
 proc triangle*(phase: Signal): Signal =
   proc f(ctx: Context): float =
     let x = 2.0 * phase.f(ctx)

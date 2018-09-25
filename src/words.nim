@@ -1,6 +1,7 @@
 import analyzers
 import audio/signal
 import basics
+import chebyshev
 import delays
 import envelopes
 import filters
@@ -231,6 +232,14 @@ proc execute*(s: var seq[Signal], cmd: string) =
   of "or": s.word(`or`, "or")
   of "bqhpf": s.word(biQuadHPF, "bqhpf")
   of "bqlpf": s.word(biQuadLPF, "bqlpf")
+  of "cheb2": s.word(cheb2, "cheb2")
+  of "cheb3": s.word(cheb3, "cheb3")
+  of "cheb4": s.word(cheb4, "cheb4")
+  of "cheb5": s.word(cheb5, "cheb5")
+  of "cheb6": s.word(cheb6, "cheb6")
+  of "cheb7": s.word(cheb7, "cheb7")
+  of "cheb8": s.word(cheb8, "cheb8")
+  of "cheb9": s.word(cheb9, "cheb9")
   of "circle", "angular": s.word(circle, "circle")
   of "clausen": s.word(clausen, "clausen", 100)
   of "clip": s.word(clip, "clip", -1.0, 1.0)

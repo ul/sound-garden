@@ -30,7 +30,12 @@ proc unit*(x: Signal): Signal = x.range(0.0, 1.0)
 proc sampleAndHold*(t, x: Signal): Signal =
   result = Signal()
   let y = result.mult
-  result.f = ((1.0 - t) * y + t * x).f
+  proc f(ctx: Context): float =
+    let t = t.f(ctx)
+    let x = x.f(ctx)
+    let y = y.f(ctx)
+    return (1.0 - t) * y + t * x
+  result.f = f
   result.label = "sampleAndHold(" && t.label && ", " && x.label && ")"
 
 proc db2amp*(x: float): float = 20.0 * x.log10

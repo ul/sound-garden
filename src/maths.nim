@@ -8,6 +8,15 @@ proc `+`*(a: Signal, b: Signal): Signal =
     label: "(" && a.label && " + " && b.label && ")"
   )
 
+proc sum*(signals: varargs[Signal]): Signal =
+  var xs = newSeq[Signal](signals.len) 
+  for i in 0..<signals.len:
+    xs[i] = signals[i]
+  proc f(ctx: Context): float =
+    for x in xs:
+      result += x.f(ctx)
+  Signal(f: f)
+
 # NOTE short circuiting on the first operand being zero to allow
 # efficient triggered envelopes trick
 proc `.*`*(a: Signal, b: Signal): Signal =
@@ -47,6 +56,16 @@ proc `*`*(a: Signal, b: Signal): Signal =
     f: proc(ctx: Context): float = a.f(ctx) * b.f(ctx),
     label: "(" && a.label && " * " && b.label && ")"
   )
+
+proc prod*(signals: varargs[Signal]): Signal =
+  var xs = newSeq[Signal](signals.len) 
+  for i in 0..<signals.len:
+    xs[i] = signals[i]
+  proc f(ctx: Context): float =
+    result = 1.0
+    for x in xs:
+      result *= x.f(ctx)
+  Signal(f: f)
 
 proc `-`*(a: Signal, b: Signal): Signal =
   Signal(

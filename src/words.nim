@@ -255,6 +255,7 @@ proc execute*(s: var seq[Signal], cmd: string) =
   of "fm": s.word(fm, "fm", 0)
   of "sfb": s.word(smoothFeedback, "sfb")
   of "ssfb": s.word(smoothestFeedback, "ssfb")
+  of "gaussian": s.word(gaussian, "gaussian")
   of "h": s.word(biQuadHPF, "bqhpf", 0.7071)
   of "hcosine": s.word(hcosine, "hcosine")
   of "hpf": s.word(hpf, "hpf")

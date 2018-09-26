@@ -5,17 +5,27 @@ import maths
 import soundio
 import std
 
+proc holdStart(trigger: Signal): Signal = (trigger.prime <= 0.0 and trigger > 0.0).sampleAndHold(sampleNumber)
+proc holdEnd(trigger: Signal): Signal = (trigger.prime > 0.0 and trigger <= 0.0).sampleAndHold(sampleNumber)
+
 # NOTE apex is relative to start and is in seconds
 proc impulse*(trigger, apex: Signal): Signal =
-  let startSample = (trigger.prime <= 0.0 and trigger > 0.0).sampleAndHold(sampleNumber)
+  let startSample = trigger.holdStart
   let h = (sampleNumber - startSample) / (apex * sampleRate)
   result = h * maths.exp(1.0 - h)
   result.label = "impulse(" && trigger.label && ", " && apex.label && ")"
 
+proc gaussian*(trigger, apex, deviation: Signal): Signal =
+  let startSample = trigger.holdStart
+  let x = (sampleNumber - startSample) / sampleRate
+  let delta = x - apex
+  let ratio = delta / deviation
+  result = maths.exp(-0.5 * ratio * ratio)
+  result.label = "gaussian(" && trigger.label && ", " && apex.label && ", " && deviation.label && ")"
+
 proc adsr*(trigger, a, d, s, r: Signal): Signal =
-  let t = trigger.prime
-  let startSample = (t <= 0.0 and trigger > 0.0).sampleAndHold(sampleNumber)
-  let endSample = (t > 0.0 and trigger <= 0.0).sampleAndHold(sampleNumber)
+  let startSample = trigger.holdStart
+  let endSample = trigger.holdEnd
 
   proc f(ctx: Context): float =
     let dur = ctx.sampleDuration
@@ -71,3 +81,4 @@ proc line*(target, time: Signal): Signal =
       return target
     return value + (target - value) * delta / time
   Signal(f: f, label: "line(" && target.label && ", " && time.label && ")")
+

@@ -263,6 +263,7 @@ proc execute*(s: var seq[Signal], cmd: string) =
   of "impulse": s.word(impulse, "impulse")
   of "input", "in", "mic": s &= input
   of "l": s.word(biQuadLPF, "bqlpf", 0.7071)
+  of "line": s.word(line, "line")
   of "lpf": s.word(lpf, "lpf")
   of "markov": s.word(markovSample, "markov")
   of "max": s.word(max, "max")

@@ -252,12 +252,21 @@ dmetro:: (period) -> emit 1.0 every given period, 0.0 all other time
 [horizontal]
 impulse:: (trigger, apex) -> generate exponential impulse which reaches 1.0 in apex seconds and then fades 
 adsr:: (gate, a, d, s, r) -> classic ADSR envelope
+line:: (target, time) -> when `target` changes, smooth the transition linearly over `time` period
 
 === Modulation
 
 [horizontal]
 fm:: (carrierFreq, modulationFreq, modulationIndex) -> frequency modulated sine oscillator
 pm:: (carrierFreq, modulationFreq, modulationIndex) -> phase modulated sine oscillator
+cheb2:: (x) -> Chebyshev polynomial of degree 2
+cheb3:: (x) -> Chebyshev polynomial of degree 3
+cheb4:: (x) -> Chebyshev polynomial of degree 4
+cheb5:: (x) -> Chebyshev polynomial of degree 5
+cheb6:: (x) -> Chebyshev polynomial of degree 6
+cheb7:: (x) -> Chebyshev polynomial of degree 7
+cheb8:: (x) -> Chebyshev polynomial of degree 8
+cheb9:: (x) -> Chebyshev polynomial of degree 9
 
 === Analyzers
 

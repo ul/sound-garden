@@ -1,5 +1,7 @@
 = Sound Garden
 
+(consider reading this document at http://ul.mantike.pro/sound-garden/README.html because GitHub parses AsciiDoc improperly)
+
 == What?
 
 Sound Garden is a text based modular synthesis environment. If you ever considered text like this

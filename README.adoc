@@ -23,17 +23,17 @@ Continue reading, the rest of the document is Sound Garden manual.
 
 == Prerequisites
 
-* https://nim-lang.org[Nim] 0.18.0
+* https://nim-lang.org[Nim] 0.19.0
 * http://libsound.io[libsoundio] 1.1.0
+* http://www.mega-nerd.com/libsndfile[libsndfile] 1.0.28
 * http://liblo.sourceforge.net/[liblo] 0.29
 * https://github.com/nsf/termbox[termbox] 1.1.2
-* https://www.libsdl.org/[SDL] 2.0.8
-* https://github.com/casey/just[just] 0.3.2
-* https://github.com/watchexec/watchexec[watchexec] 1.9.0
+* https://github.com/casey/just[just] 0.3.12
+* https://github.com/watchexec/watchexec[watchexec] 1.9.2
 * https://github.com/hanslub42/rlwrap[rlwrap]
 
 ----
-$ brew install nim libsoundio liblo termbox sdl2 just watchexec rlwrap
+$ brew install nim libsoundio libsndfile liblo termbox just watchexec rlwrap
 ----
 
 == Build

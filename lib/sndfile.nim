@@ -20,7 +20,12 @@
 ## *
 ## * API documentation is in the doc/ directory of the source code tarball
 ## * and at http://www.mega-nerd.com/libsndfile/api.html.
-## 
+##
+
+when defined(linux):
+  {.passl: "-Wl,-Bstatic -lsndfile -Wl,-Bdynamic".}
+else:
+  {.passl: "-lsndfile".}
 
 ##  This is the version 1.0.X header file.
 
@@ -255,25 +260,24 @@ const
 ##  A SNDFILE* pointer can be passed around much like stdio.h's FILE* pointer.
 
 type
-  SNDFILE* = SNDFILE_tag
+  SNDFILE* = pointer
 
 ##  The following typedef is system specific and is defined when libsndfile is
 ## * compiled. sf_count_t will be a 64 bit value when the underlying OS allows
 ## * 64 bit file offsets.
 ## * On windows, we need to allow the same header file to be compiler by both GCC
 ## * and the Microsoft compiler.
-## 
+##
 
-when (defined(_MSCVER) or defined(_MSC_VER) and (_MSC_VER < 1310)):
-  type
-    sf_count_t* = __int64
-  const
-    SF_COUNT_MAX* = 0xFFFFFFFFFFFFFF64'i64
-else:
-  type
-    sf_count_t* = int64_t
-  const
-    SF_COUNT_MAX* = 0x7FFFFFFFFFFFFFFF'i64
+type
+  int64_t = int64
+  int32_t = int32
+  uint32_t = uint32
+
+type
+  sf_count_t* = int64_t
+const
+  SF_COUNT_MAX* = 0x7FFFFFFFFFFFFFFF'i64
 ##  A pointer to a SF_INFO structure is passed to sf_open () and filled in.
 ## * On write, the SF_INFO structure is filled in by the user and passed into
 ## * sf_open ().
@@ -492,9 +496,9 @@ proc sf_format_check*(info: ptr SF_INFO): cint {.importc: "sf_format_check",
 ## 
 
 const
-  SF_SEEK_SET* = SEEK_SET
-  SF_SEEK_CUR* = SEEK_CUR
-  SF_SEEK_END* = SEEK_END
+  SF_SEEK_SET* = 0
+  SF_SEEK_CUR* = 1
+  SF_SEEK_END* = 2
 
 proc sf_seek*(sndfile: ptr SNDFILE; frames: sf_count_t; whence: cint): sf_count_t {.
     importc: "sf_seek", header: "sndfile.h".}
@@ -606,8 +610,7 @@ proc sf_write_sync*(sndfile: ptr SNDFILE) {.importc: "sf_write_sync",
 ## *		#including <sndfile.h>
 ## 
 
-when (defined(ENABLE_SNDFILE_WINDOWS_PROTOTYPES) and
-    ENABLE_SNDFILE_WINDOWS_PROTOTYPES):
+when defined(ENABLE_SNDFILE_WINDOWS_PROTOTYPES):
   proc sf_wchar_open*(wpath: LPCWSTR; mode: cint; sfinfo: ptr SF_INFO): ptr SNDFILE {.
       importc: "sf_wchar_open", header: "sndfile.h".}
 ##  Getting and setting of chunks from within a sound file.
@@ -657,7 +660,9 @@ proc sf_set_chunk*(sndfile: ptr SNDFILE; chunk_info: ptr SF_CHUNK_INFO): cint {.
 ## *        that causes the iterator to be modified.
 ## * The memory for the iterator belongs to the SNDFILE* handle and is freed when
 ## * sf_close() is called.
-## 
+##
+
+type SF_CHUNK_ITERATOR = pointer
 
 proc sf_get_chunk_iterator*(sndfile: ptr SNDFILE; chunk_info: ptr SF_CHUNK_INFO): ptr SF_CHUNK_ITERATOR {.
     importc: "sf_get_chunk_iterator", header: "sndfile.h".}

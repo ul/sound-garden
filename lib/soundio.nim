@@ -1,11 +1,9 @@
-when defined(windows):
-  const soname = "soundio.dll"
-elif defined(macosx):
-  const soname = "libsoundio.dylib"
+when defined(linux):
+  {.passl: "-Wl,-Bstatic -lsoundio -Wl,-Bdynamic".}
 else:
-  const soname = "libsoundio.so"
+  {.passl: "-lsoundio".}
 
-{.pragma: sio, cdecl, dynlib: soname, importc: "soundio_$1".}
+{.pragma: sio, cdecl, header: "soundio/soundio.h", importc: "soundio_$1".}
 {.pragma: cenum, pure, final, size: sizeof(cint).}
 {.pragma: siochan, sio, importc: "soundio_channel_layout_$1"}
 {.pragma: siodev, sio, importc: "soundio_device_$1"}

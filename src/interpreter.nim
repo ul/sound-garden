@@ -1,5 +1,6 @@
 import audio/[audio, context, signal]
 import basics
+import disk
 import environment
 import math
 import maths
@@ -165,6 +166,13 @@ proc interpret*(env: Environment, line: string) =
           echo "Stack is empty, but indexing signal required"
       else:
         echo "Usage: rtable:<name>"
+    of "ltable", "lt":
+      if c.len > 2:
+        let key = c[1]
+        let path = c[2]
+        env.loadTable(key, path)
+      else:
+        echo "Usage: ltable:<name>:<path>"
     else:
       env.currentStack.execute(cmd)
   for i in 0..<MAX_STREAMS:

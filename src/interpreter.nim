@@ -130,7 +130,7 @@ proc interpret*(env: Environment, line: string) =
         if env.currentStack.len > 1:
           let key = c[1]
           let size = c[2].parseInt
-          var t = Sampler(table: newSeq[float](size * env.channelCount))
+          var t = Sampler(table: newSeq[float](size * MAX_CHANNELS))
           let x = env.currentStack.pop
           let trigger = env.currentStack.pop
           let delta = sampleNumber - trigger.sampleAndHold(sampleNumber)
@@ -138,7 +138,7 @@ proc interpret*(env: Environment, line: string) =
             result = x.f(ctx)
             let n = delta.f(ctx).toInt
             if n < size:
-              t.table[n + ctx.channel * size] = result
+              t.table[n * MAX_CHANNELS + ctx.channel] = result
           env.currentStack &= Signal(f: f, label: trigger.label & " " & x.label & " " & cmd)
           env.samplers[key] = t
         else:
@@ -151,14 +151,14 @@ proc interpret*(env: Environment, line: string) =
           let key = c[1]
           if env.samplers.hasKey(key):
             let t = env.samplers[key]
-            let size = t.table.len div env.channelCount
+            let size = t.table.len div MAX_CHANNELS
             let x = env.currentStack.pop
             proc f(ctx: Context): float =
               let z = (x.f(ctx) * ctx.sampleRate.toFloat).splitDecimal
               let i = z[0].toInt
               let k = z[1]
-              let offset = ctx.channel * size
-              return (1.0 - k) * t.table[(i mod size) + offset] + k * t.table[((i + 1) mod size) + offset]
+              return (1.0 - k) * t.table[(i mod size) * MAX_CHANNELS + ctx.channel] +
+                k * t.table[((i + 1) mod size) * MAX_CHANNELS + ctx.channel]
             env.currentStack &= Signal(f: f, label: x.label & " " & cmd)
           else:
             echo "Table is not found: ", key

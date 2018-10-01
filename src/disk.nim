@@ -20,8 +20,8 @@ proc loadTable*(env: Environment; key, path: string) =
   let sampler = Sampler(table: newSeq[float](frames * channels))
   for frame in 0..<frames:
     for channel in 0..<channels:
-      let i = (frame + channel * frames).int
-      let offset = cast[int](ptrBuffer) + (channel + frame * channels) * cdouble.sizeof
+      let i = (channel + frame * channels).int
+      let offset = cast[int](ptrBuffer) + i * cdouble.sizeof
       sampler.table[i] = cast[ptr cdouble](offset)[]
   env.samplers[key] = sampler
   ptrBuffer.dealloc

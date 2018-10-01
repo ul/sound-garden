@@ -83,9 +83,3 @@ proc smoothFeedback*(x, delayTime, gain: Signal): Signal =
   # max delay 5 seconds @ 48000 sample rate
   result.f = (x + gain * result.mult.smoothDelay(delayTime, 32, 60 * 48000)).f
   result.label = "smoothFeedback(" && x.label && ", " && delayTime.label && ", " && gain.label && ")"
-
-proc smoothestFeedback*(x, delayTime, gain: Signal): Signal =
-  result = Signal()
-  # max delay 5 seconds @ 48000 sample rate
-  result.f = (x + gain * result.mult.smoothestDelay(delayTime, 32, 60 * 48000)).f
-  result.label = "smoothestFeedback(" && x.label && ", " && delayTime.label && ", " && gain.label && ")"

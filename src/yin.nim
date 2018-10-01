@@ -23,7 +23,7 @@ proc pitch*(x: Signal, window: int = 1024, threshold: float = 0.2): Signal =
 
   proc f(ctx: Context): float =
     let i = ctx.channel
-    let samplesOffset   = i * window
+    let samplesOffset = i * window
     let offset = i * size
     # TODO implement buffer overlap for lower latency
     if (ctx.sampleNumber and mask) == 0:

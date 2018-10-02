@@ -248,7 +248,13 @@ proc newIOStream*(ss: SoundSystem, withInput: bool): Result[IOStream] =
     inStream.userdata = ptrUserdata
   outStream.userdata = ptrUserdata
 
-  var ctx = Context(channel: 0, sampleNumber: 0, sampleRate: sampleRate)
+  var ctx = Context(
+    channel: 0,
+    sampleNumber: 0,
+    sampleRate: sampleRate,
+    sampleRateFloat: sampleRate.toFloat,
+    sampleDuration: 1.0 / sampleRate.toFloat
+  )
   var silence = 0.toSignal
 
   GC_ref ctx

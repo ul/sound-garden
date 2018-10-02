@@ -43,7 +43,7 @@ proc pitch*(x: Signal, cycles: int = 16): Signal =
     if m > 0:
       return (cycles * ctx.sampleRate).toFloat / m
     else:
-      return ctx.sampleRate.toFloat
+      return ctx.sampleRateFloat
   Signal(f: f, label: "pitch(" && x.label && ")")
 
 # NOTE cycles MUST be power of two!
@@ -59,7 +59,7 @@ proc adaptivePitch*(x: Signal, cycles: int = 16): Signal =
       result = (cycles * ctx.sampleRate).toFloat / m
       freqs[ctx.channel].set(result)
     else:
-      return ctx.sampleRate.toFloat
+      return ctx.sampleRateFloat
   Signal(f: f, label: "adaptivePitch(" && x.label && ")").mult
 
 # TODO RMS, peak amp trackers, based on generic window, as in ad libitum

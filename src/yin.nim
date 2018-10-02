@@ -49,7 +49,7 @@ proc pitch*(x: Signal, window: int = 1024, threshold: float = 0.2): Signal =
           break
         tau += 1
       if not ((tau == size) or (buffer[tau + offset] >= threshold)):
-        pitches[i] = ctx.sampleRate.toFloat / parabolicInterpolation(buffer, tau, size, offset)
+        pitches[i] = ctx.sampleRateFloat / parabolicInterpolation(buffer, tau, size, offset)
       else:
         pitches[i] = 0.0
 

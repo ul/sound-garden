@@ -9,7 +9,7 @@ proc saw*(freq: Signal, phase0: Signal = 0): Signal =
   var phases: array[MAX_CHANNELS, float]
   proc f(ctx: Context): float =
     let i = ctx.channel
-    phases[i] = (phases[i] + 2.0 * freq.f(ctx) / ctx.sampleRate.toFloat).mod(2.0)
+    phases[i] = (phases[i] + 2.0 * freq.f(ctx) / ctx.sampleRateFloat).mod(2.0)
     let p0 = phase0.f(ctx) + 1.0
     return (p0 + phases[i]).mod(2.0) - 1.0
   Signal(f: f, label: "saw(" && freq.label && ", " && phase0.label && ")").mult

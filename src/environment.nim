@@ -5,7 +5,7 @@ import soundio
 import std
 import tables
 
-const MAX_STREAMS* = 8
+const MAX_STREAMS* = 4
 
 type
   Sampler*     = ref object

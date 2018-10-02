@@ -61,10 +61,10 @@ signal then passed to the audio stream and called every sample to produce sound.
 
 == REPL
 
-Sound Garden REPL is operated via simple stack-based language. The only type of element to be put on stack is
-a signal. There are 8 such stacks available. Sound Garden plays top element of each stack in a separate sound
-stream, simultaneously. Multiple stacks navigation and element transfer is covered in details
-at the end of the section.
+Sound Garden REPL is operated via simple stack-based language. The only type of element to be put
+on stack is a signal. There are 4 such stacks available (it's hardcoded but could be tuned). Sound
+Garden plays top element of each stack in a separate sound stream, simultaneously. Multiple stacks
+navigation and element transfer is covered in details at the end of the section.
 
 === Run
 

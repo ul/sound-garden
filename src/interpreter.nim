@@ -4,6 +4,7 @@ import disk
 import environment
 import math
 import maths
+import samplers
 import std
 import strutils
 import tables
@@ -151,15 +152,10 @@ proc interpret*(env: Environment, line: string) =
           let key = c[1]
           if env.samplers.hasKey(key):
             let t = env.samplers[key]
-            let size = t.table.len div MAX_CHANNELS
             let x = env.currentStack.pop
-            proc f(ctx: Context): float =
-              let z = (x.f(ctx) * ctx.sampleRate.toFloat).splitDecimal
-              let i = z[0].toInt
-              let k = z[1]
-              return (1.0 - k) * t.table[(i mod size) * MAX_CHANNELS + ctx.channel] +
-                k * t.table[((i + 1) mod size) * MAX_CHANNELS + ctx.channel]
-            env.currentStack &= Signal(f: f, label: x.label & " " & cmd)
+            let s = x.sampleReader(t)
+            s.label = x.label & " " & cmd
+            env.currentStack &= s
           else:
             echo "Table is not found: ", key
         else:
@@ -170,7 +166,7 @@ proc interpret*(env: Environment, line: string) =
       if c.len > 2:
         let key = c[1]
         let path = c[2]
-        env.loadTable(key, path)
+        env.loadSampler(key, path)
       else:
         echo "Usage: ltable:<name>:<path>"
     else:

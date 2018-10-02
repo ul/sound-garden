@@ -4,7 +4,7 @@ import tables
 import sequtils
 
 # TODO better error handling
-proc loadTable*(env: Environment; key, path: string) =
+proc loadSampler*(env: Environment; key, path: string) =
   let ptrInfo = SF_INFO.sizeof.alloc
   var info = cast[ptr SF_INFO](ptrInfo)
   info.format = 0

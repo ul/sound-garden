@@ -2,6 +2,7 @@ import audio/[audio, context, signal]
 import basics
 import disk
 import environment
+import granular
 import math
 import maths
 import samplers
@@ -169,6 +170,24 @@ proc interpret*(env: Environment, line: string) =
         env.loadSampler(key, path)
       else:
         echo "Usage: ltable:<name>:<path>"
+    of "grain":
+      if c.len > 1:
+        if env.currentStack.len > 2:
+          let key = c[1]
+          if env.samplers.hasKey(key):
+              let t = env.samplers[key]
+              let width = env.currentStack.pop
+              let acceleration = env.currentStack.pop
+              let period = env.currentStack.pop
+              let s = grain(t, period, acceleration, width)
+              s.label = period.label & " " & acceleration.label & " " & width.label & " " & cmd
+              env.currentStack &= s 
+          else:
+            echo "Table is not found: ", key
+        else:
+          echo "Stack is too short, but period, acceleration and width signals are required"
+      else:
+        echo "Usage: grain:<table name>"
     else:
       env.currentStack.execute(cmd)
   for i in 0..<MAX_STREAMS:

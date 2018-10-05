@@ -5,33 +5,24 @@ import maths
 import soundio
 import std
 
-proc holdStart(trigger: Signal): Signal = (trigger.prime <= 0.0 and trigger > 0.0).sampleAndHold(sampleNumber)
-proc holdEnd(trigger: Signal): Signal = (trigger.prime > 0.0 and trigger <= 0.0).sampleAndHold(sampleNumber)
-
-# NOTE apex is relative to start and is in seconds
 proc impulse*(trigger, apex: Signal): Signal =
-  let startSample = trigger.holdStart
-  let h = (sampleNumber - startSample) / (apex * sampleRate)
+  let h = trigger.timeSinceStart / apex
   result = h * maths.exp(1.0 - h)
   result.label = "impulse(" && trigger.label && ", " && apex.label && ")"
 
 proc gaussian*(trigger, apex, deviation: Signal): Signal =
-  let startSample = trigger.holdStart
-  let x = (sampleNumber - startSample) / sampleRate
-  let delta = x - apex
-  let ratio = delta / deviation
-  result = maths.exp(-0.5 * ratio * ratio)
+  let delta = trigger.timeSinceStart - apex
+  result = maths.exp(-0.5 * delta * delta / deviation)
   result.label = "gaussian(" && trigger.label && ", " && apex.label && ", " && deviation.label && ")"
 
 proc adsr*(trigger, a, d, s, r: Signal): Signal =
-  let startSample = trigger.holdStart
-  let endSample = trigger.holdEnd
+  let start = trigger.sampleAndHoldStart(signal.time)
+  let stop = trigger.sampleAndHoldEnd(signal.time)
 
   proc f(ctx: Context): float =
-    let dur = ctx.sampleDuration
     let time = ctx.time
-    let start = startSample.f(ctx) * dur
-    let stop = endSample.f(ctx) * dur
+    let start = start.f(ctx)
+    let stop = stop.f(ctx)
 
     var delta = time - start
     let a = a.f(ctx)
@@ -64,21 +55,20 @@ proc adsr*(trigger, a, d, s, r: Signal): Signal =
       r.label && ")" 
   )
 
-proc line*(target, time: Signal): Signal =
-  let time = time * sampleRate
+proc line*(target, duration: Signal): Signal =
   let targetPrime = target.prime
   let targetChanged = target != targetPrime
   let value = targetChanged.sampleAndHold(targetPrime)
-  let delta = sampleNumber - targetChanged.sampleAndHold(sampleNumber)
+  let delta = targetChanged.timeSince
   proc f(ctx: Context): float =
     let delta  = delta.f(ctx)
     let value  = value.f(ctx)
-    let time   = time.f(ctx)
+    let duration = duration.f(ctx)
     let target = target.f(ctx)
     if delta <= 0.0:
       return value
-    if delta >= time:
+    if delta >= duration:
       return target
-    return value + (target - value) * delta / time
-  Signal(f: f, label: "line(" && target.label && ", " && time.label && ")")
+    return value + (target - value) * delta / duration
+  Signal(f: f, label: "line(" && target.label && ", " && duration.label && ")")
 

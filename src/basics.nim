@@ -38,6 +38,52 @@ proc sampleAndHold*(t, x: Signal): Signal =
   result.f = f
   result.label = "sampleAndHold(" && t.label && ", " && x.label && ")"
 
+proc sampleAndHoldSharp*(t, x: Signal): Signal =
+  result = Signal()
+  let y = result.mult
+  proc f(ctx: Context): float =
+    # pre-computing before condition because otherwise
+    # values are optimized out for somewhat reason
+    let x = x.f(ctx)
+    let y = y.f(ctx)
+    let t = t.f(ctx)
+    return if t > 0.0: x else: y
+  result.f = f
+  result.label = "sampleAndHoldSharp(" && t.label && ", " && x.label && ")"
+
+proc sampleAndHoldStart*(t, x: Signal): Signal =
+  result = Signal()
+  let y = result.mult
+  let p = t.prime
+  proc f(ctx: Context): float =
+    # pre-computing before condition because otherwise
+    # values are optimized out for somewhat reason
+    let x = x.f(ctx)
+    let y = y.f(ctx)
+    let p = p.f(ctx)
+    let t = t.f(ctx)
+    return if (p <= 0.0) and (t > 0.0): x else: y
+  result.f = f
+  result.label = "sampleAndHoldStart(" && t.label && ", " && x.label && ")"
+
+proc sampleAndHoldEnd*(t, x: Signal): Signal =
+  result = Signal()
+  let y = result.mult
+  let p = t.prime
+  proc f(ctx: Context): float =
+    # pre-computing before condition because otherwise
+    # values are optimized out for somewhat reason
+    let x = x.f(ctx)
+    let y = y.f(ctx)
+    let p = p.f(ctx)
+    let t = t.f(ctx)
+    return if (p > 0.0) and (t <= 0.0): x else: y
+  result.f = f
+  result.label = "sampleAndHoldEnd(" && t.label && ", " && x.label && ")"
+
+proc timeSince*(t: Signal): Signal = signal.time - t.sampleAndHoldSharp(signal.time)
+proc timeSinceStart*(t: Signal): Signal = signal.time - t.sampleAndHoldStart(signal.time)
+
 proc db2amp*(x: float): float = 20.0 * x.log10
 proc amp2db*(x: float): float = 10.pow(x / 20.0)
 

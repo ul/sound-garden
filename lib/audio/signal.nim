@@ -82,4 +82,6 @@ proc prime*(x: Signal): Signal =
 
 let sampleNumber* = Signal(f: proc(ctx: Context): float = ctx.sampleNumber.toFloat, label: "sampleNumber")
 let sampleRate* = Signal(f: proc(ctx: Context): float = ctx.sampleRateFloat, label: "sampleRate")
+let sampleDuration* = Signal(f: proc(ctx: Context): float = ctx.sampleDuration, label: "sampleDuration")
 let sampleAngularPeriod* = Signal(f: proc(ctx: Context): float = ctx.sampleAngularPeriod, label: "sampleAngularPeriod")
+let time* = Signal(f: proc(ctx: Context): float = ctx.time, label: "time")

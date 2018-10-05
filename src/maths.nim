@@ -195,7 +195,11 @@ proc wrap*(x: Signal, min: Signal = -1, max: Signal = 1): Signal =
     label: "wrap(" && x.label && ", " && min.label && ", " && max.label && ")"
   )
 
-let exp* = exp.toSignal("exp")
+proc exp*(x: Signal): Signal =
+  Signal(
+    f: proc(ctx: Context): float = exp(x.f(ctx)),
+    label: "exp(" && x.label && ")"
+  )
 
 proc sin*(phase: Signal): Signal =
   Signal(

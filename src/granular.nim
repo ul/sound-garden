@@ -15,7 +15,7 @@ import triggers
 const FWTM = 0.125 / ln(10.0) 
 
 proc grain*(sampler: Sampler; period, accel, width: Signal): Signal =
-  let trig = period.dmetro
+  let trig = period.dmetroHold
   let dur = sampler.table.len div MAX_CHANNELS
   let index = (accel / dur).saw.unit * dur
   let offset = trig.sampleAndHoldStart(whiteNoise.range(0, dur))

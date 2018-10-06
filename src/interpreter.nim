@@ -178,14 +178,14 @@ proc interpret*(env: Environment, line: string) =
               let t = env.samplers[key]
               let width = env.currentStack.pop
               let acceleration = env.currentStack.pop
-              let period = env.currentStack.pop
-              let s = grain(t, period, acceleration, width)
-              s.label = period.label & " " & acceleration.label & " " & width.label & " " & cmd
+              let trigger = env.currentStack.pop
+              let s = grain(t, trigger, acceleration, width)
+              s.label = trigger.label & " " & acceleration.label & " " & width.label & " " & cmd
               env.currentStack &= s 
           else:
             echo "Table is not found: ", key
         else:
-          echo "Stack is too short, but period, acceleration and width signals are required"
+          echo "Stack is too short, but trigger, acceleration and width signals are required"
       else:
         echo "Usage: grain:<table name>"
     else:

@@ -14,12 +14,11 @@ import triggers
 
 const FWTM = 0.125 / ln(10.0) 
 
-proc grain*(sampler: Sampler; period, accel, width: Signal): Signal =
-  let trig = period.dmetroHold
+proc grain*(sampler: Sampler; trigger, accel, width: Signal): Signal =
   let dur = sampler.table.len div MAX_CHANNELS
   let index = (accel / dur).saw.unit * dur
-  let offset = trig.sampleAndHoldStart(whiteNoise.range(0, dur))
+  let offset = trigger.sampleAndHoldStart(whiteNoise.range(0, dur))
   let x = (index + offset).sampleReader(sampler)
-  let envelope = trig.gaussian(0.5 * period, width * width * FWTM)
+  let envelope = trigger.gaussian(0.5 * width, width * width * FWTM)
   return x * envelope
 

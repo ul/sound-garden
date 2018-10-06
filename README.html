@@ -757,7 +757,7 @@ to be a subject of interest then you might find Sound Garden worthwhile having a
 <div class="sect1">
 <h2 id="_why">Why?</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>There is Sporth, Extempore, SuperCollider, PureData and other excellent mature environments out there, why to build own? Because I want to understand how audio synth works and true understanding comes as an ability to re-create subject from the scratch in a different form. More about my position in the upcoming manifesto.</p></div>
+<div class="paragraph"><p>There is Sporth, Extempore, SuperCollider, PureData and other excellent mature environments out there, why to build own? Because I want to understand how audio synth works and true understanding comes as an ability to re-create subject from the scratch in a different form. <a href="http://ul.mantike.pro/SoundGardenManifesto">More</a></p></div>
 </div>
 </div>
 <div class="sect1">
@@ -772,12 +772,17 @@ to be a subject of interest then you might find Sound Garden worthwhile having a
 <div class="ulist"><ul>
 <li>
 <p>
-<a href="https://nim-lang.org">Nim</a> 0.18.0
+<a href="https://nim-lang.org">Nim</a> 0.19.0
 </p>
 </li>
 <li>
 <p>
 <a href="http://libsound.io">libsoundio</a> 1.1.0
+</p>
+</li>
+<li>
+<p>
+<a href="http://www.mega-nerd.com/libsndfile">libsndfile</a> 1.0.28
 </p>
 </li>
 <li>
@@ -792,17 +797,12 @@ to be a subject of interest then you might find Sound Garden worthwhile having a
 </li>
 <li>
 <p>
-<a href="https://www.libsdl.org/">SDL</a> 2.0.8
+<a href="https://github.com/casey/just">just</a> 0.3.12
 </p>
 </li>
 <li>
 <p>
-<a href="https://github.com/casey/just">just</a> 0.3.2
-</p>
-</li>
-<li>
-<p>
-<a href="https://github.com/watchexec/watchexec">watchexec</a> 1.9.0
+<a href="https://github.com/watchexec/watchexec">watchexec</a> 1.9.2
 </p>
 </li>
 <li>
@@ -813,7 +813,7 @@ to be a subject of interest then you might find Sound Garden worthwhile having a
 </ul></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>$ brew install nim libsoundio liblo termbox sdl2 just watchexec rlwrap</code></pre>
+<pre><code>$ brew install nim libsoundio libsndfile liblo termbox just watchexec rlwrap</code></pre>
 </div></div>
 </div>
 </div>
@@ -877,10 +877,10 @@ signal then passed to the audio stream and called every sample to produce sound.
 <div class="sect1">
 <h2 id="_repl">REPL</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Sound Garden REPL is operated via simple stack-based language. The only type of element to be put on stack is
-a signal. There are 8 such stacks available. Sound Garden plays top element of each stack in a separate sound
-stream, simultaneously. Multiple stacks navigation and element transfer is covered in details
-at the end of the section.</p></div>
+<div class="paragraph"><p>Sound Garden REPL is operated via simple stack-based language. The only type of element to be put
+on stack is a signal. There are 4 such stacks available (it&#8217;s hardcoded but could be tuned). Sound
+Garden plays top element of each stack in a separate sound stream, simultaneously. Multiple stacks
+navigation and element transfer is covered in details at the end of the section.</p></div>
 <div class="sect2">
 <h3 id="_run">Run</h3>
 <div class="listingblock">
@@ -2124,7 +2124,7 @@ an error.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2018-09-29 07:35:59 AEST
+ 2018-10-07 10:35:33 AEDT
 </div>
 </div>
 </body>

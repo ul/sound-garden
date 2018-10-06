@@ -15,7 +15,7 @@ to be a subject of interest then you might find Sound Garden worthwhile having a
 
 == Why?
 
-There is Sporth, Extempore, SuperCollider, PureData and other excellent mature environments out there, why to build own? Because I want to understand how audio synth works and true understanding comes as an ability to re-create subject from the scratch in a different form. More about my position in the upcoming manifesto.
+There is Sporth, Extempore, SuperCollider, PureData and other excellent mature environments out there, why to build own? Because I want to understand how audio synth works and true understanding comes as an ability to re-create subject from the scratch in a different form. http://ul.mantike.pro/SoundGardenManifesto[More]
 
 == How?
 

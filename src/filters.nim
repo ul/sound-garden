@@ -74,12 +74,12 @@ proc biQuadHPF*(x, freq: Signal, Q: Signal = 0.7071): Signal =
 
 proc feedback*(x, delayTime, gain: Signal): Signal =
   result = Signal()
-  # max delay 5 seconds @ 48000 sample rate
+  # max delay 60 seconds @ 48000 sample rate
   result.f = (x + gain * result.mult.delay(delayTime, 60 * 48000)).f 
   result.label = "feedback(" && x.label && ", " && delayTime.label && ", " && gain.label && ")"
 
 proc smoothFeedback*(x, delayTime, gain: Signal): Signal =
   result = Signal()
-  # max delay 5 seconds @ 48000 sample rate
+  # max delay 60 seconds @ 48000 sample rate
   result.f = (x + gain * result.mult.smoothDelay(delayTime, 32, 60 * 48000)).f
   result.label = "smoothFeedback(" && x.label && ", " && delayTime.label && ", " && gain.label && ")"

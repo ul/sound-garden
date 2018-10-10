@@ -1,16 +1,22 @@
 import analyzers
-import audio/signal
+import audio/[context, signal]
 import basics
 import chebyshev
 import delays
+import disk
+import environment
 import envelopes
 import filters
+import granular
 import markov
 import maths
 import modulation
 import oscillators
+import samplers
 import spats
+import std
 import strutils
+import tables
 import triggers
 import yin
 
@@ -148,8 +154,9 @@ proc word(s: var seq[Signal], f: proc(a, b, c, d, e: Signal): Signal, label: str
   result.label = a.label & " " & b.label & " " & c.label & " " & d.label & " " & e.label & " " & label
   s &= result
 
-proc execute*(s: var seq[Signal], cmd: string) =
-  case cmd
+proc execute*(env: Environment, s: var seq[Signal], cmd: string) =
+  let c = cmd.split(":")
+  case c[0]
   of "empty":
     s.setLen(0)
   of "dump":
@@ -306,6 +313,118 @@ proc execute*(s: var seq[Signal], cmd: string) =
   of "amp2db", "a2db": s.word(amp2db.toSignal, "amp2db")
   of "freq2midi", "f2m": s.word(freq2midi.toSignal, "freq2midi")
   of "midi2freq", "m2f": s.word(midi2freq.toSignal, "midi2freq")
+  of "var", "box":
+    if c.len > 1:
+      if s.len > 0:
+        let key = c[1]
+        env.variables[key] = s.pop
+        s &= Signal(
+          f: proc(ctx: Context): float = env.variables[key].f(ctx),
+          label: cmd
+        )
+      else:
+        echo "Stack is empty"
+    else:
+      echo "Provide a key"
+  of "set":
+    if c.len > 1:
+      if s.len > 0:
+        env.variables[c[1]] = s.pop
+      else:
+        echo "Stack is empty"
+    else:
+      echo "Provide a key"
+  of "get":
+    if c.len > 1:
+      let key = c[1]
+      if env.variables.hasKey(key):
+        s &= Signal(
+          f: proc(ctx: Context): float = env.variables[key].f(ctx),
+          label: "var:" & key
+        )
+      else:
+        echo "Value is not set"
+    else:
+      echo "Provide a key"
+  of "unbox":
+    if c.len > 1:
+      if env.variables.hasKey(c[1]):
+        s &= env.variables[c[1]]
+      else:
+        echo "Value is not set"
+    else:
+      echo "Provide a key"
+  of "osc":
+    if c.len > 1:
+      let key = c[1]
+      if not env.oscVariables.hasKey(key):
+        env.oscVariables[key] = box(0.0)
+      let sig = env.oscVariables[key].toSignal
+      sig.label = cmd
+      s &= sig
+    else:
+      echo "Provide a key"
+  of "wtable", "wt":
+    if c.len > 2:
+      if s.len > 1:
+        let key = c[1]
+        let size = c[2].parseInt
+        var t = Sampler(table: newSeq[float](size * MAX_CHANNELS))
+        let x = s.pop
+        let trigger = s.pop
+        let delta = sampleNumber - trigger.sampleAndHold(sampleNumber)
+        proc f(ctx: Context): float =
+          result = x.f(ctx)
+          let n = delta.f(ctx).toInt
+          if n < size:
+            t.table[n * MAX_CHANNELS + ctx.channel] = result
+        s &= Signal(f: f, label: trigger.label & " " & x.label & " " & cmd)
+        env.samplers[key] = t
+      else:
+        echo "Stack is too short, but trigger and input signals are required"
+    else:
+      echo "Usage: wtable:<name>:<len>"
+  of "rtable", "rt":
+    if c.len > 1:
+      if s.len > 0:
+        let key = c[1]
+        if env.samplers.hasKey(key):
+          let t = env.samplers[key]
+          let x = s.pop
+          let sig = x.sampleReader(t)
+          sig.label = x.label & " " & cmd
+          s &= sig
+        else:
+          echo "Table is not found: ", key
+      else:
+        echo "Stack is empty, but indexing signal required"
+    else:
+      echo "Usage: rtable:<name>"
+  of "ltable", "lt":
+    if c.len > 2:
+      let key = c[1]
+      let path = c[2]
+      env.loadSampler(key, path)
+    else:
+      echo "Usage: ltable:<name>:<path>"
+  of "grain":
+    if c.len > 1:
+      if s.len > 2:
+        let key = c[1]
+        if env.samplers.hasKey(key):
+            let t = env.samplers[key]
+            let width = s.pop
+            let acceleration = s.pop
+            let trigger = s.pop
+            let sig = grain(t, trigger, acceleration, width)
+            sig.label = trigger.label & " " & acceleration.label & " " & width.label & " " & cmd
+            s &= sig 
+        else:
+          echo "Table is not found: ", key
+      else:
+        echo "Stack is too short, but trigger, acceleration and width signals are required"
+    else:
+      echo "Usage: grain:<table name>"
   else:
     try:
       s &= cmd.parseFloat.toSignal

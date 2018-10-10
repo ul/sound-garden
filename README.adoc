@@ -337,6 +337,8 @@ $ just tui
 ----
 
 Pass `--with-input` if you want to use input signal: `just tui --with-input`
+Pass `--with-osc` to start OSC server: `just tui --with-osc`
+Or pass both ;-)
 
 Text user interface mode provides an extension to the REPL mode. It allows to organize snippets of code in
 the same language as in REPL into a graph of interconnected nodes. Each node have its own stack
@@ -372,5 +374,3 @@ To quickly save current nodes configuration press `/` (slash). It will be writte
 To quit TUI press escape.
 
 Obviously, multiple stacks navigation and manipulation commands are not available for use in nodes code.
-
-Variables, OSC integration and tables are not available at the moment in TUI mode but will be in the future.

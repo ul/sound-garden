@@ -15,7 +15,6 @@ proc loadSampler*(env: Environment; key, path: string) =
   let ptrBuffer = (info.frames * info.channels * cdouble.sizeof).alloc
   let channels = info.channels
   let frames = h.sf_readf_double(cast[ptr cdouble](ptrBuffer), info.frames)
-  echo channels, "x", frames
   # TODO resampling, channels
   let sampler = Sampler(table: newSeq[float](frames * channels))
   for frame in 0..<frames:

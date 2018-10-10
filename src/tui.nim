@@ -77,7 +77,7 @@ proc alignBars(node: var Node) =
     node.inputsDraft = spaces(1) & node.inputsDraft.strip & spaces(1)
     node.signalDraft = spaces(1) & node.signalDraft.strip & spaces(1)
 
-proc commitNode(app: App, node: var Node) =
+proc commitNode(app: App, env: Environment, node: var Node) =
   node.inputsDraft = node.inputsDraft.strip
   node.signalDraft = node.signalDraft.strip
 
@@ -91,7 +91,7 @@ proc commitNode(app: App, node: var Node) =
   for i in node.inputs:
     stack &= app.getInput(i)
   for c in node.signalDraft.splitWhitespace:
-    stack.execute(c)
+    env.execute(stack, c)
   if stack.len > 0:
     node.signal = stack.pop
   else:
@@ -206,7 +206,7 @@ proc deserialize(s: string, env: Environment): App =
       position: (position[0].parseInt, position[1].parseInt)
     )
     result.nodes &= node
-    result.commitNode(node)
+    result.commitNode(env, node)
   for i in 0..<MAX_STREAMS:
     env.streams[i].signal = result.getInput(i)
 
@@ -257,7 +257,7 @@ proc run*(env: Environment) =
         let i = c.x - p.x - 1
         case evt.sym:
         of Symbol.Enter:
-          app.commitNode(app.activeNode)
+          app.commitNode(env, app.activeNode)
           app.state = Idle
           app.activeNode = nil
         of Symbol.Left:
@@ -284,7 +284,7 @@ proc run*(env: Environment) =
         let i = c.x - p.x - 1
         case evt.sym:
         of Symbol.Enter:
-          app.commitNode(app.activeNode)
+          app.commitNode(env, app.activeNode)
           app.state = Idle
           app.activeNode = nil
         of Symbol.Left:
@@ -372,14 +372,14 @@ proc run*(env: Environment) =
       of EditInputs:
         case evt.action:
         of Left:
-          app.commitNode(app.activeNode)
+          app.commitNode(env, app.activeNode)
           app.state = Idle
           app.activeNode = nil
         else: discard
       of EditSignal:
         case evt.action:
         of Left:
-          app.commitNode(app.activeNode)
+          app.commitNode(env, app.activeNode)
           app.state = Idle
           app.activeNode = nil
         else: discard

@@ -281,7 +281,7 @@ pitch:: (x) -> pitch detector, implemented as YIN algorithm with block size of 1
 var:<NAME>:: (x) -> take a signal from the top of stack, wrap it into the variable NAME and put variable back on the stack
 set:<NAME>:: (x) -> consume a signal and assign it to the variable NAME
 get:<NAME>:: () -> signal which current value is the same as of signal in the variable NAME
-unbox::<NAME>:: () -> put signal assigned to the variable NAME on the top of stack; difference from `get` is that when new signal will be assigned to the variable unboxed one will stay the same 
+unbox:<NAME>:: () -> put signal assigned to the variable NAME on the top of stack; difference from `get` is that when new signal will be assigned to the variable unboxed one will stay the same 
 
 Note that you need to assign variable via var or set before using it. Exceptions is lowercase one-letter variables from 'a' to 'z', they are pre-assigned with constant signal 0 on the start. 
 

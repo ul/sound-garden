@@ -373,4 +373,7 @@ To quickly save current nodes configuration press `/` (slash). It will be writte
 
 To quit TUI press escape.
 
-Obviously, multiple stacks navigation and manipulation commands are not available for use in nodes code.
+Obviously, multiple stacks navigation and manipulation commands are not available for use in nodes
+code. Another limitation is that `/interpret` OSC endpoint doesn't make much sense in TUI mode
+because streams are not connected to REPL stacks operated by interpret. Everything else should work
+fine.

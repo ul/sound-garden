@@ -2116,7 +2116,10 @@ unused signals on the stack would not harm, but having source code which exhaust
 an error.</p></div>
 <div class="paragraph"><p>To quickly save current nodes configuration press <code>/</code> (slash). It will be written into the <code>dump.txt</code> file in the current working directory. To load configuraion from that file press <code>\</code> (backslash).</p></div>
 <div class="paragraph"><p>To quit TUI press escape.</p></div>
-<div class="paragraph"><p>Obviously, multiple stacks navigation and manipulation commands are not available for use in nodes code.</p></div>
+<div class="paragraph"><p>Obviously, multiple stacks navigation and manipulation commands are not available for use in nodes
+code. Another limitation is that <code>/interpret</code> OSC endpoint doesn&#8217;t make much sense in TUI mode
+because streams are not connected to REPL stacks operated by interpret. Everything else should work
+fine.</p></div>
 </div>
 </div>
 </div>
@@ -2125,7 +2128,7 @@ an error.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2018-10-10 17:30:33 AEDT
+ 2018-10-11 08:06:57 AEDT
 </div>
 </div>
 </body>

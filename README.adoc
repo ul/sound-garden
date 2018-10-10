@@ -163,7 +163,7 @@ rot:: take 3rd from the top element and put it on the top, a b c -> b c a
 
 === Oscillators
 
-All oscillators produce signal in range -1..1
+All non-hyperbolic oscillators produce signal in range -1..1
 
 [horizontal] 
 saw:: (freq, phase0) -> saw oscillator

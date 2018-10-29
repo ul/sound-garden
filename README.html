@@ -1931,7 +1931,7 @@ osc:&lt;NAME&gt;
 <div class="hdlist"><table>
 <tr>
 <td class="hdlist1">
-wtable:&lt;NAME&gt;:&lt;N&gt;, wt:&lt;NAME&gt;:&lt;N&gt;
+writetable:&lt;NAME&gt;:&lt;N&gt;, wt:&lt;NAME&gt;:&lt;N&gt;
 <br />
 </td>
 <td class="hdlist2">
@@ -1942,12 +1942,45 @@ wtable:&lt;NAME&gt;:&lt;N&gt;, wt:&lt;NAME&gt;:&lt;N&gt;
 </tr>
 <tr>
 <td class="hdlist1">
-rtable:&lt;NAME&gt;
+durwritetable:&lt;NAME&gt;:&lt;D&gt;, dwt:&lt;NAME&gt;:&lt;D&gt;
+<br />
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+(trigger, x) &#8594; on trigger write D seconds (for each channel) of signal x to the table NAME. It puts a signal back on the stack which passes through x values.
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+readtable:&lt;NAME&gt;
 <br />
 </td>
 <td class="hdlist2">
 <p style="margin-top: 0;">
 (indexer) &#8594; read from the table using indexer signal as a position in seconds, with linear interpolation.
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+loadtable:&lt;NAME&gt;:&lt;PATH&gt;, lt:&lt;NAME&gt;:&lt;PATH&gt;
+<br />
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+() &#8594; load file from the PATH into the table NAME; note that sample rate and channels count of the file must align with current stream ones
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+savetable:&lt;NAME&gt;:&lt;PATH&gt;, st:&lt;NAME&gt;:&lt;PATH&gt;
+<br />
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+() &#8594; save the table NAME into the file at PATH in 24-bit PCM WAV format
 </p>
 </td>
 </tr>
@@ -2128,7 +2161,7 @@ fine.</p></div>
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2018-10-11 08:06:57 AEDT
+ 2018-10-29 18:18:38 AEDT
 </div>
 </div>
 </body>

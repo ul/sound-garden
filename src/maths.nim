@@ -161,6 +161,12 @@ proc `mod`*(a: Signal, b: Signal): Signal =
     label: "(" && a.label && " mod " && b.label && ")"
   )
 
+proc pow*(a: Signal, b: Signal): Signal =
+  Signal(
+    f: proc(ctx: Context): float = pow(a.f(ctx), b.f(ctx)),
+    label: "pow(" && a.label && ", " && b.label && ")"
+  )
+
 proc min*(a: Signal, b: Signal): Signal =
   Signal(
     f: proc(ctx: Context): float = min(a.f(ctx), b.f(ctx)),

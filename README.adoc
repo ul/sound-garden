@@ -302,8 +302,11 @@ osc:<NAME>:: () -> value of OSC variable, 0 if it was not set yet
 === Tables
 
 [horizontal]
-wtable:<NAME>:<N>, wt:<NAME>:<N>:: (trigger, x) -> on trigger write N samples (for each channel) of signal x to the table NAME. It puts a signal back on the stack which passes through x values.
-rtable:<NAME>:: (indexer) -> read from the table using indexer signal as a position in seconds, with linear interpolation.
+writetable:<NAME>:<N>, wt:<NAME>:<N>:: (trigger, x) -> on trigger write N samples (for each channel) of signal x to the table NAME. It puts a signal back on the stack which passes through x values.
+durwritetable:<NAME>:<D>, dwt:<NAME>:<D>:: (trigger, x) -> on trigger write D seconds (for each channel) of signal x to the table NAME. It puts a signal back on the stack which passes through x values.
+readtable:<NAME>:: (indexer) -> read from the table using indexer signal as a position in seconds, with linear interpolation.
+loadtable:<NAME>:<PATH>, lt:<NAME>:<PATH>:: () -> load file from the PATH into the table NAME; note that sample rate and channels count of the file must align with current stream ones
+savetable:<NAME>:<PATH>, st:<NAME>:<PATH>:: () -> save the table NAME into the file at PATH in 24-bit PCM WAV format
 
 === Multiple stacks
 

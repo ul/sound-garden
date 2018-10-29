@@ -84,6 +84,9 @@ proc sampleAndHoldEnd*(t, x: Signal): Signal =
 proc timeSince*(t: Signal): Signal = signal.time - t.sampleAndHoldSharp(signal.time)
 proc timeSinceStart*(t: Signal): Signal = signal.time - t.sampleAndHoldStart(signal.time)
 
+proc sampleSince*(t: Signal): Signal = sampleNumber - t.sampleAndHoldSharp(sampleNumber)
+proc sampleSinceStart*(t: Signal): Signal = sampleNumber - t.sampleAndHoldStart(sampleNumber)
+
 proc db2amp*(x: float): float = 20.0 * x.log10
 proc amp2db*(x: float): float = 10.pow(x / 20.0)
 

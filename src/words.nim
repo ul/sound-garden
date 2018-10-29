@@ -284,6 +284,7 @@ proc execute*(env: Environment, s: var seq[Signal], cmd: string) =
   of "pan": s.word(pan, "pan")
   of "pitch": s.word(yin.pitch, "pitch", 1024, 0.2)
   of "pm": s.word(pm, "pm", 0)
+  of "pow": s.word(pow, "pow")
   of "prime": s.word(prime, "prime")
   of "project": s.word(project, "project")
   of "pulse": s.word(pulse, "pulse")
@@ -364,27 +365,40 @@ proc execute*(env: Environment, s: var seq[Signal], cmd: string) =
       s &= sig
     else:
       echo "Provide a key"
-  of "wtable", "wt":
+  of "writetable", "wt":
     if c.len > 2:
       if s.len > 1:
         let key = c[1]
         let size = c[2].parseInt
         var t = Sampler(table: newSeq[float](size * MAX_CHANNELS))
+        env.samplers[key] = t
         let x = s.pop
         let trigger = s.pop
-        let delta = sampleNumber - trigger.sampleAndHold(sampleNumber)
-        proc f(ctx: Context): float =
-          result = x.f(ctx)
-          let n = delta.f(ctx).toInt
-          if n < size:
-            t.table[n * MAX_CHANNELS + ctx.channel] = result
-        s &= Signal(f: f, label: trigger.label & " " & x.label & " " & cmd)
-        env.samplers[key] = t
+        let sig = t.sampleWriter(trigger, x)
+        sig.label = trigger.label & " " & x.label & " " & cmd
+        s &= sig
       else:
         echo "Stack is too short, but trigger and input signals are required"
     else:
       echo "Usage: wtable:<name>:<len>"
-  of "rtable", "rt":
+  of "durwritetable", "dwt":
+    if c.len > 2:
+      if s.len > 1:
+        let key = c[1]
+        let dur = c[2].parseFloat
+        let size = (dur * env.sampleRate.toFloat).toInt
+        var t = Sampler(table: newSeq[float](size * MAX_CHANNELS))
+        env.samplers[key] = t
+        let x = s.pop
+        let trigger = s.pop
+        let sig = t.sampleWriter(trigger, x)
+        sig.label = trigger.label & " " & x.label & " " & cmd
+        s &= sig
+      else:
+        echo "Stack is too short, but trigger and input signals are required"
+    else:
+      echo "Usage: wtable:<name>:<len>"
+  of "readtable", "rt":
     if c.len > 1:
       if s.len > 0:
         let key = c[1]
@@ -400,11 +414,21 @@ proc execute*(env: Environment, s: var seq[Signal], cmd: string) =
         echo "Stack is empty, but indexing signal required"
     else:
       echo "Usage: rtable:<name>"
-  of "ltable", "lt":
+  of "loadtable", "lt":
     if c.len > 2:
       let key = c[1]
       let path = c[2]
-      env.loadSampler(key, path)
+      env.samplers[key] = loadSampler(path)
+    else:
+      echo "Usage: ltable:<name>:<path>"
+  of "savetable", "st":
+    if c.len > 2:
+      let key = c[1]
+      let path = c[2]
+      if env.samplers.hasKey(key):
+        env.saveSampler(env.samplers[key], path)
+      else:
+        echo "Table is not found: ", key
     else:
       echo "Usage: ltable:<name>:<path>"
   of "grain":

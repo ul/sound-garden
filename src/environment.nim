@@ -12,6 +12,7 @@ type
     table*       : seq[float]
   Environment* = ref object
     channelCount*: int
+    sampleRate*  : int
     head*        : int
     oscVariables*: TableRef[string, Box[float]]
     samplers*    : TableRef[string, Sampler]
@@ -49,6 +50,7 @@ proc init*(withInput: bool): Environment =
     result.stacks[i] = @[]
     if i == 0:
       result.channelCount = dac.outStream.layout.channelCount
+      result.sampleRate = dac.outStream.sampleRate
       echo "Sample Rate:\t", dac.outStream.sampleRate
       echo "Channels:\t", result.channelCount
       if withInput:
